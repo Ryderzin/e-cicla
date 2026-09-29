@@ -10,5 +10,9 @@ export const REGION_BOUNDS: Area = {
   maxLat: -19.7823,
 }
 
-/** Where the map opens: Fatec Zona Leste, Av. Águia de Haia, 2983 - São Paulo/SP. */
-export const INITIAL_CENTER = { latitude: -23.5213425, longitude: -46.4760113 }
+/** Av. Águia de Haia, 2983 - São Paulo/SP. The map opens here and shows it with its own marker. */
+export const FATEC_ZONA_LESTE = {
+  name: 'Fatec Zona Leste',
+  latitude: -23.5213425,
+  longitude: -46.4760113,
+}
