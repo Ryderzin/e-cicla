@@ -2,6 +2,7 @@ package br.com.ecicla.api.importer;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -20,7 +21,9 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestClientResponseException;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -37,6 +40,9 @@ import br.com.ecicla.api.point.PointStatus;
 public class PointImportService {
 
     private static final Logger log = LoggerFactory.getLogger(PointImportService.class);
+
+    private static final int OSM_ATTEMPTS = 3;
+    private static final Duration OSM_RETRY_WAIT = Duration.ofSeconds(30);
 
     private final OverpassClient overpassClient;
     private final MongoTemplate mongoTemplate;
@@ -73,14 +79,24 @@ public class PointImportService {
     }
 
     private List<ImportedPoint> fetchFromOsm() {
-        List<OverpassResponse.Element> elements;
-        try {
-            log.info("Fetching collection points from OpenStreetMap (this can take a few minutes)...");
-            elements = overpassClient.fetchElements();
-        } catch (RestClientException e) {
-            log.error("Could not fetch points from OpenStreetMap; continuing with the seed file only: {}",
-                    e.getMessage());
-            return List.of();
+        List<OverpassResponse.Element> elements = null;
+        for (int attempt = 1; elements == null; attempt++) {
+            try {
+                log.info("Fetching collection points from OpenStreetMap, attempt {} of {} (this can take a few minutes)...",
+                        attempt, OSM_ATTEMPTS);
+                elements = overpassClient.fetchElements();
+            } catch (RestClientException e) {
+                if (attempt == OSM_ATTEMPTS || !isTemporary(e)) {
+                    log.error("Could not fetch points from OpenStreetMap ({}); continuing with the seed file only",
+                            describe(e));
+                    return List.of();
+                }
+                log.warn("OpenStreetMap is busy ({}); trying again in {} seconds", describe(e),
+                        OSM_RETRY_WAIT.toSeconds());
+                if (!waitBeforeRetry()) {
+                    return List.of();
+                }
+            }
         }
         List<ImportedPoint> points = elements.stream()
                 .map(OsmPointMapper::toImportedPoint)
@@ -88,6 +104,33 @@ public class PointImportService {
                 .toList();
         log.info("OpenStreetMap returned {} elements, {} usable", elements.size(), points.size());
         return points;
+    }
+
+    /** Overpass answers 429/502/503/504 or times out when it is overloaded; those are worth retrying. */
+    private static boolean isTemporary(RestClientException e) {
+        if (e instanceof RestClientResponseException response) {
+            int status = response.getStatusCode().value();
+            return status == 429 || status == 502 || status == 503 || status == 504;
+        }
+        return e instanceof ResourceAccessException;
+    }
+
+    /** Short description of the failure; error responses carry a whole HTML page we do not want in the log. */
+    private static String describe(RestClientException e) {
+        if (e instanceof RestClientResponseException response) {
+            return "HTTP " + response.getStatusCode().value();
+        }
+        return e.getMessage();
+    }
+
+    private static boolean waitBeforeRetry() {
+        try {
+            Thread.sleep(OSM_RETRY_WAIT);
+            return true;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return false;
+        }
     }
 
     private List<ImportedPoint> readSeed() {
