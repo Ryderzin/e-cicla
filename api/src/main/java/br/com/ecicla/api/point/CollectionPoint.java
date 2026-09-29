@@ -9,7 +9,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 /**
  * An electronic waste collection point. {@code location} is a GeoJSON point, so its coordinates are
- * stored as [longitude, latitude].
+ * stored as [longitude, latitude]. {@code addressApproximate} is true when the source had no address
+ * and it was looked up from the coordinates ({@code address} stays null if nothing was found there).
  */
 @Document(CollectionPoint.COLLECTION)
 public record CollectionPoint(
@@ -17,6 +18,7 @@ public record CollectionPoint(
         String name,
         GeoJsonPoint location,
         String address,
+        Boolean addressApproximate,
         List<Material> acceptedMaterials,
         String openingHours,
         String operator,

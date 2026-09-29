@@ -4,10 +4,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -89,12 +86,12 @@ final class OsmPointMapper {
         if (full != null) {
             return full;
         }
-        String street = text(tags, "addr:street");
-        String number = text(tags, "addr:housenumber");
-        String streetLine = street != null && number != null ? street + ", " + number : street;
-        String cityState = join(" - ", text(tags, "addr:city"), text(tags, "addr:state"));
-        String area = join(", ", text(tags, "addr:suburb"), cityState);
-        return join(" - ", streetLine, area);
+        return AddressFormat.format(
+                text(tags, "addr:street"),
+                text(tags, "addr:housenumber"),
+                text(tags, "addr:suburb"),
+                text(tags, "addr:city"),
+                text(tags, "addr:state"));
     }
 
     private static String text(Map<String, String> tags, String key) {
@@ -104,10 +101,5 @@ final class OsmPointMapper {
 
     private static String firstPresent(String first, String second) {
         return first != null ? first : second;
-    }
-
-    private static String join(String separator, String... parts) {
-        String joined = Stream.of(parts).filter(Objects::nonNull).collect(Collectors.joining(separator));
-        return joined.isEmpty() ? null : joined;
     }
 }

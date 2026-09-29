@@ -10,6 +10,8 @@ export interface PointSummary {
 
 export interface PointDetails extends PointSummary {
   address: string | null
+  /** True when the source had no address and it was estimated from the point's location. */
+  addressApproximate: boolean
   openingHours: string | null
   operator: string | null
   notes: string | null

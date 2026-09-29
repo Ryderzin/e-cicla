@@ -148,7 +148,14 @@ function DetailsList({ details }: { details: PointDetails }) {
     <dl className="space-y-4">
       <div>
         <dt className="text-sm font-semibold tracking-wide text-slate-600 uppercase">Endereço</dt>
-        <dd className="mt-1 text-slate-900">{details.address ?? 'Não informado'}</dd>
+        <dd className="mt-1 text-slate-900">
+          {details.address ?? 'Não informado'}
+          {details.address && details.addressApproximate && (
+            <span className="mt-1 block text-sm text-slate-600">
+              Endereço aproximado, calculado pela localização do ponto no mapa.
+            </span>
+          )}
+        </dd>
       </div>
       <div>
         <dt className="text-sm font-semibold tracking-wide text-slate-600 uppercase">Horário de funcionamento</dt>

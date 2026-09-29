@@ -38,6 +38,7 @@ class PointControllerTest {
             "Ecoponto Centro",
             new GeoJsonPoint(-46.63, -23.55),
             "Rua Exemplo, 100 - Centro, São Paulo - SP",
+            false,
             List.of(Material.BATTERIES, Material.MOBILE_PHONES),
             "Mo-Sa 08:00-17:00",
             "Prefeitura",
@@ -131,12 +132,25 @@ class PointControllerTest {
                 .andExpect(jsonPath("$.latitude").value(-23.55))
                 .andExpect(jsonPath("$.longitude").value(-46.63))
                 .andExpect(jsonPath("$.address").value("Rua Exemplo, 100 - Centro, São Paulo - SP"))
+                .andExpect(jsonPath("$.addressApproximate").value(false))
                 .andExpect(jsonPath("$.acceptedMaterials[0]").value("BATTERIES"))
                 .andExpect(jsonPath("$.openingHours").value("Mo-Sa 08:00-17:00"))
                 .andExpect(jsonPath("$.operator").value("Prefeitura"))
                 .andExpect(jsonPath("$.notes").value("Não recebe geladeiras"))
                 .andExpect(jsonPath("$.sourceType").value("OSM"))
                 .andExpect(jsonPath("$.updatedAt").value("2026-10-01T12:00:00Z"));
+    }
+
+    @Test
+    void flagsApproximateAddresses() throws Exception {
+        CollectionPoint approximate = new CollectionPoint(ID, null, POINT.location(), "Rua Castro Alves - Araraquara - SP",
+                true, POINT.acceptedMaterials(), null, null, null, POINT.source(), PointStatus.ACTIVE, POINT.updatedAt());
+        when(repository.findByIdAndStatus(ID, PointStatus.ACTIVE)).thenReturn(Optional.of(approximate));
+
+        mvc.perform(get("/api/points/{id}", ID))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.address").value("Rua Castro Alves - Araraquara - SP"))
+                .andExpect(jsonPath("$.addressApproximate").value(true));
     }
 
     @Test

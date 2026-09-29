@@ -5,10 +5,13 @@ import java.io.InputStream;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,7 +37,8 @@ import br.com.ecicla.api.point.PointStatus;
 
 /**
  * Imports collection points from OpenStreetMap and from the manual seed file. Points are upserted by
- * {@code source.externalId}, so running the import again updates them instead of duplicating.
+ * {@code source.externalId}, so running the import again updates them instead of duplicating. Points
+ * without an address get an approximate one from their coordinates (Nominatim), looked up only once.
  */
 @Service
 public class PointImportService {
@@ -43,21 +47,28 @@ public class PointImportService {
 
     private static final int OSM_ATTEMPTS = 3;
     private static final Duration OSM_RETRY_WAIT = Duration.ofSeconds(30);
+    private static final int NOMINATIM_MAX_CONSECUTIVE_FAILURES = 3;
 
     private final OverpassClient overpassClient;
+    private final NominatimClient nominatimClient;
     private final MongoTemplate mongoTemplate;
     private final ObjectMapper objectMapper;
     private final Resource seedFile;
+    private final boolean lookUpMissingAddresses;
 
     PointImportService(
             OverpassClient overpassClient,
+            NominatimClient nominatimClient,
             MongoTemplate mongoTemplate,
             ObjectMapper objectMapper,
-            @Value("${app.import.seed-file}") Resource seedFile) {
+            @Value("${app.import.seed-file}") Resource seedFile,
+            @Value("${app.import.look-up-missing-addresses}") boolean lookUpMissingAddresses) {
         this.overpassClient = overpassClient;
+        this.nominatimClient = nominatimClient;
         this.mongoTemplate = mongoTemplate;
         this.objectMapper = objectMapper;
         this.seedFile = seedFile;
+        this.lookUpMissingAddresses = lookUpMissingAddresses;
     }
 
     public record ImportResult(int fromOsm, int fromSeed, int inserted, int updated) {
@@ -157,7 +168,78 @@ public class PointImportService {
         return points;
     }
 
-    private ImportResult upsert(Iterable<ImportedPoint> points, int fromOsm, int fromSeed) {
+    /** What the import does with a point's address. */
+    enum AddressAction {
+        /** The source (OpenStreetMap or seed) has an address: use it. */
+        FROM_SOURCE,
+        /** This location was already looked up (found or not): keep the result, do not ask Nominatim again. */
+        KEEP_STORED,
+        /** No address yet: look up an approximate one from the coordinates. */
+        LOOK_UP
+    }
+
+    static AddressAction addressAction(ImportedPoint point, CollectionPoint stored) {
+        if (point.address() != null) {
+            return AddressAction.FROM_SOURCE;
+        }
+        boolean alreadyLookedUp = stored != null && Boolean.TRUE.equals(stored.addressApproximate());
+        if (alreadyLookedUp && sameLocation(stored.location(), point)) {
+            return AddressAction.KEEP_STORED;
+        }
+        return AddressAction.LOOK_UP;
+    }
+
+    private static boolean sameLocation(GeoJsonPoint location, ImportedPoint point) {
+        return location != null
+                && Math.abs(location.getX() - point.longitude()) < 1e-7
+                && Math.abs(location.getY() - point.latitude()) < 1e-7;
+    }
+
+    private Map<String, CollectionPoint> findStored(Collection<ImportedPoint> points) {
+        List<String> externalIds = points.stream().map(ImportedPoint::externalId).toList();
+        Query query = Query.query(Criteria.where("source.externalId").in(externalIds));
+        return mongoTemplate.find(query, CollectionPoint.class).stream()
+                .collect(Collectors.toMap(p -> p.source().externalId(), p -> p, (a, b) -> a));
+    }
+
+    /**
+     * Approximate addresses by external id. A point is in the map when Nominatim answered, with an
+     * empty value when it had no useful address there; points whose lookup failed are left out.
+     */
+    private Map<String, Optional<String>> lookUpAddresses(List<ImportedPoint> points) {
+        Map<String, Optional<String>> answered = new HashMap<>();
+        if (points.isEmpty() || !lookUpMissingAddresses) {
+            return answered;
+        }
+        log.info("Looking up approximate addresses for {} points without one (about {} seconds)...",
+                points.size(), points.size() + 1);
+        int consecutiveFailures = 0;
+        for (ImportedPoint point : points) {
+            try {
+                answered.put(point.externalId(), nominatimClient.reverse(point.latitude(), point.longitude()));
+                consecutiveFailures = 0;
+            } catch (RestClientException e) {
+                log.warn("Could not look up the address of {} ({})", point.externalId(), describe(e));
+                if (++consecutiveFailures == NOMINATIM_MAX_CONSECUTIVE_FAILURES) {
+                    log.error("Nominatim failed {} times in a row; skipping the remaining addresses",
+                            consecutiveFailures);
+                    break;
+                }
+            }
+        }
+        log.info("Found approximate addresses for {} of {} points",
+                answered.values().stream().filter(Optional::isPresent).count(), points.size());
+        return answered;
+    }
+
+    private ImportResult upsert(Collection<ImportedPoint> points, int fromOsm, int fromSeed) {
+        Map<String, CollectionPoint> stored = findStored(points);
+        Map<String, AddressAction> addressActions = new HashMap<>();
+        points.forEach(p -> addressActions.put(p.externalId(), addressAction(p, stored.get(p.externalId()))));
+        Map<String, Optional<String>> lookedUp = lookUpAddresses(points.stream()
+                .filter(p -> addressActions.get(p.externalId()) == AddressAction.LOOK_UP)
+                .toList());
+
         Instant now = Instant.now();
         BulkOperations bulk = mongoTemplate.bulkOps(BulkOperations.BulkMode.UNORDERED, CollectionPoint.class);
         int operations = 0;
@@ -166,7 +248,6 @@ public class PointImportService {
             Update update = new Update()
                     .set("name", point.name())
                     .set("location", new GeoJsonPoint(point.longitude(), point.latitude()))
-                    .set("address", point.address())
                     .set("acceptedMaterials", point.acceptedMaterials())
                     .set("openingHours", point.openingHours())
                     .set("operator", point.operator())
@@ -176,6 +257,20 @@ public class PointImportService {
                     .set("updatedAt", now)
                     // Only new points start active; later changes by administrators are kept.
                     .setOnInsert("status", PointStatus.ACTIVE);
+            switch (addressActions.get(point.externalId())) {
+                case FROM_SOURCE -> update.set("address", point.address()).set("addressApproximate", false);
+                case KEEP_STORED -> {
+                    // Leave the stored approximate address as it is.
+                }
+                case LOOK_UP -> {
+                    // Stored even when nothing was found, so the location is not looked up again.
+                    // When the lookup failed, whatever is stored stays and is retried on the next import.
+                    Optional<String> address = lookedUp.get(point.externalId());
+                    if (address != null) {
+                        update.set("address", address.orElse(null)).set("addressApproximate", true);
+                    }
+                }
+            }
             bulk.upsert(byExternalId, update);
             operations++;
         }
