@@ -30,7 +30,8 @@ export function parseOpeningHours(value: string): OpeningHoursRow[] | null {
     return [{ days: 'Todos os dias', hours: '24 horas' }]
   }
 
-  const rules = text.split(';').map((rule) => rule.trim()).filter(Boolean)
+  // Rules are separated by ";", or by "," right after a time ("Mo-Fr 08:00-17:00,Sa 08:00-12:00").
+  const rules = text.split(/;|(?<=\d),(?=\s*(?:Mo|Tu|We|Th|Fr|Sa|Su|PH)\b)/).map((rule) => rule.trim()).filter(Boolean)
   if (rules.length === 0) {
     return null
   }
@@ -86,7 +87,10 @@ function formatTimes(times: string): string | null {
     return null
   }
   if (times === 'off' || times === 'closed') {
-    return 'Fechado'
+    return 'fechado'
+  }
+  if (times === 'sunrise-sunset') {
+    return 'do nascer ao pôr do sol'
   }
   const ranges = times.split(',').map((range) => {
     const match = TIME_RANGE.exec(range)

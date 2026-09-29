@@ -83,7 +83,17 @@ export default function PointMap({ points, selected, onSelect }: PointMapProps) 
             title={name}
             alt={name}
             keyboard
-            eventHandlers={{ click: () => onSelect(point) }}
+            eventHandlers={{
+              click: () => onSelect(point),
+              // Leaflet makes markers focusable buttons but only opens popups on Enter, so handle it here.
+              keydown: (event: L.LeafletKeyboardEvent) => {
+                const key = event.originalEvent.key
+                if (key === 'Enter' || key === ' ') {
+                  event.originalEvent.preventDefault()
+                  onSelect(point)
+                }
+              },
+            }}
           />
         )
       })}
