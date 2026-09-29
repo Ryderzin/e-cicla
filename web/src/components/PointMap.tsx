@@ -1,6 +1,6 @@
 import L from 'leaflet'
 import { useEffect } from 'react'
-import { MapContainer, Marker, TileLayer, Tooltip, useMap, ZoomControl } from 'react-leaflet'
+import { MapContainer, Marker, TileLayer, useMap, ZoomControl } from 'react-leaflet'
 
 import type { PointSummary } from '../api/points.ts'
 import fatecLogo from '../assets/fatec-zona-leste.png'
@@ -56,7 +56,7 @@ const FATEC_ICON = L.divIcon({
   html:
     pinSvg('#047857', FATEC_ICON_WIDTH, 11) +
     // Centered on the circle, which sits at y = 15 on the 30x42 grid.
-    `<img src="${fatecLogo}" alt="" style="position:absolute;left:50%;transform:translateX(-50%);` +
+    `<img src="${fatecLogo}" alt="${FATEC_ZONA_LESTE.name}" style="position:absolute;left:50%;transform:translateX(-50%);` +
     `top:${Math.round((15 * FATEC_ICON_WIDTH) / 30 - FATEC_LOGO_HEIGHT / 2)}px;height:${FATEC_LOGO_HEIGHT}px">`,
   iconSize: [FATEC_ICON_WIDTH, pinHeight(FATEC_ICON_WIDTH)],
   iconAnchor: [FATEC_ICON_WIDTH / 2, pinHeight(FATEC_ICON_WIDTH)],
@@ -113,18 +113,14 @@ export default function PointMap({ points, selected, onSelect }: PointMapProps) 
         url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
       <ZoomControl position="topleft" zoomInTitle="Aproximar" zoomOutTitle="Afastar" />
-      {/* Reference marker, not a collection point: it only shows the name and does not open the details panel. */}
+      {/* Reference marker, not a collection point: it does not open the details panel. */}
       <Marker
         position={[FATEC_ZONA_LESTE.latitude, FATEC_ZONA_LESTE.longitude]}
         icon={FATEC_ICON}
         interactive={false}
         keyboard={false}
         zIndexOffset={500}
-      >
-        <Tooltip permanent direction="bottom" offset={[0, 2]}>
-          {FATEC_ZONA_LESTE.name}
-        </Tooltip>
-      </Marker>
+      />
       {points.map((point) => {
         const name = point.name ?? UNNAMED_POINT
         return (
