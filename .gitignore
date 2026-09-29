@@ -1,0 +1,17 @@
+# Java / Maven
+api/target/
+
+# Node
+node_modules/
+web/dist/
+
+# Variáveis de ambiente locais
+.env.local
+.env.*.local
+
+# IDEs e sistema
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
