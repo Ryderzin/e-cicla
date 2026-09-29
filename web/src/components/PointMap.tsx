@@ -4,13 +4,19 @@ import { MapContainer, Marker, TileLayer, useMap } from 'react-leaflet'
 
 import type { PointSummary } from '../api/points.ts'
 import { UNNAMED_POINT } from '../lib/materials.ts'
+import { INITIAL_CENTER, REGION_BOUNDS } from '../lib/region.ts'
 
-const BRAZIL_CENTER: L.LatLngTuple = [-14.2, -51.9]
-const BRAZIL_ZOOM = 4
-// Keeps the map from zooming in to street level when there is only one point.
-const MAX_FIT_ZOOM = 15
 // Same as Tailwind's "md" breakpoint, where the details panel moves to the right side.
 const DESKTOP_QUERY = '(min-width: 768px)'
+// Zoomed in on the initial center's neighbourhood; one level wider on narrow phone screens
+// so the nearest points are still in view.
+const INITIAL_ZOOM_DESKTOP = 12
+const INITIAL_ZOOM_PHONE = 11
+// A little margin around the region so points on its edge are not stuck under the map controls.
+const MAX_BOUNDS = L.latLngBounds(
+  [REGION_BOUNDS.minLat, REGION_BOUNDS.minLng],
+  [REGION_BOUNDS.maxLat, REGION_BOUNDS.maxLng],
+).pad(0.05)
 // Size of the details panel (see PointDetailsPanel: md:w-96 and max-h-[65%]).
 const PANEL_WIDTH = 384
 const BOTTOM_SHEET_SHARE = 0.65
@@ -32,15 +38,17 @@ function pinIcon(fill: string, width: number): L.Icon {
 const DEFAULT_ICON = pinIcon('#047857', 30) // emerald-700
 const SELECTED_ICON = pinIcon('#b45309', 38) // amber-700
 
-function FitToPoints({ points }: { points: PointSummary[] }) {
+/** Stops zooming out past the level where the whole region fits on screen (it depends on the screen size). */
+function LimitZoomToRegion() {
   const map = useMap()
   useEffect(() => {
-    if (points.length === 0) {
-      return
+    const updateMinZoom = () => map.setMinZoom(map.getBoundsZoom(MAX_BOUNDS))
+    updateMinZoom()
+    map.on('resize', updateMinZoom)
+    return () => {
+      map.off('resize', updateMinZoom)
     }
-    const bounds = L.latLngBounds(points.map((point) => [point.latitude, point.longitude] as L.LatLngTuple))
-    map.fitBounds(bounds, { padding: [48, 48], maxZoom: MAX_FIT_ZOOM })
-  }, [map, points])
+  }, [map])
   return null
 }
 
@@ -66,8 +74,15 @@ interface PointMapProps {
 }
 
 export default function PointMap({ points, selected, onSelect }: PointMapProps) {
+  const initialZoom = window.matchMedia(DESKTOP_QUERY).matches ? INITIAL_ZOOM_DESKTOP : INITIAL_ZOOM_PHONE
   return (
-    <MapContainer center={BRAZIL_CENTER} zoom={BRAZIL_ZOOM} className="absolute inset-0 z-0">
+    <MapContainer
+      center={[INITIAL_CENTER.latitude, INITIAL_CENTER.longitude]}
+      zoom={initialZoom}
+      maxBounds={MAX_BOUNDS}
+      maxBoundsViscosity={1}
+      className="absolute inset-0 z-0"
+    >
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -97,7 +112,7 @@ export default function PointMap({ points, selected, onSelect }: PointMapProps) 
           />
         )
       })}
-      <FitToPoints points={points} />
+      <LimitZoomToRegion />
       <KeepSelectedVisible point={selected} />
     </MapContainer>
   )

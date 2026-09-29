@@ -24,7 +24,7 @@ function Icon({ className = 'size-6', children }: IconProps & { children: ReactN
   )
 }
 
-export function LogoIcon(props: IconProps) {
+export function RecycleIcon(props: IconProps) {
   return (
     <Icon {...props}>
       <path d="M20 12a8 8 0 1 1-2.34-5.66" />

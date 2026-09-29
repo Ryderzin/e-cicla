@@ -3,6 +3,7 @@ import { type ReactNode, useCallback, useEffect, useState } from 'react'
 import { fetchPoints, type PointSummary } from '../api/points.ts'
 import PointDetailsPanel from '../components/PointDetailsPanel.tsx'
 import PointMap from '../components/PointMap.tsx'
+import { REGION_BOUNDS } from '../lib/region.ts'
 
 type PointsState = { status: 'loading' } | { status: 'error' } | { status: 'success'; points: PointSummary[] }
 
@@ -15,7 +16,7 @@ export default function MapPage() {
 
   useEffect(() => {
     const controller = new AbortController()
-    fetchPoints(controller.signal)
+    fetchPoints(REGION_BOUNDS, controller.signal)
       .then((points) => setState({ status: 'success', points }))
       .catch(() => {
         if (!controller.signal.aborted) {

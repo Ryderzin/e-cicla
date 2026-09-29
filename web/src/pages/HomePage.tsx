@@ -8,9 +8,9 @@ import {
   ChargerIcon,
   ChecklistIcon,
   LaptopIcon,
-  LogoIcon,
   MapPinIcon,
   PhoneIcon,
+  RecycleIcon,
   WarningIcon,
 } from '../components/icons.tsx'
 
@@ -114,7 +114,7 @@ export default function HomePage() {
             <div className="rounded-xl border border-emerald-200 bg-white p-5">
               <div className="flex items-center gap-3">
                 <span className="rounded-lg bg-emerald-100 p-2 text-emerald-800">
-                  <LogoIcon />
+                  <RecycleIcon />
                 </span>
                 <h3 className="text-lg font-semibold text-slate-900">No ponto de coleta, vira reciclagem</h3>
               </div>

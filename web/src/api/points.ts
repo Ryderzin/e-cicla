@@ -27,8 +27,24 @@ async function getJson<T>(path: string, signal?: AbortSignal): Promise<T> {
   return (await response.json()) as T
 }
 
-export function fetchPoints(signal?: AbortSignal): Promise<PointSummary[]> {
-  return getJson<PointSummary[]>('/api/points', signal)
+/** Rectangular area of the map, in degrees. */
+export interface Area {
+  minLng: number
+  minLat: number
+  maxLng: number
+  maxLat: number
+}
+
+export function fetchPoints(area?: Area, signal?: AbortSignal): Promise<PointSummary[]> {
+  const query = area
+    ? `?${new URLSearchParams({
+        minLng: String(area.minLng),
+        minLat: String(area.minLat),
+        maxLng: String(area.maxLng),
+        maxLat: String(area.maxLat),
+      })}`
+    : ''
+  return getJson<PointSummary[]>(`/api/points${query}`, signal)
 }
 
 export function fetchPoint(id: string, signal?: AbortSignal): Promise<PointDetails> {

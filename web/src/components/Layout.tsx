@@ -1,7 +1,5 @@
 import { Link, NavLink, Outlet } from 'react-router'
 
-import { LogoIcon } from './icons.tsx'
-
 function navLinkClass({ isActive }: { isActive: boolean }) {
   const base = 'rounded-md px-3 py-2 text-sm font-medium sm:text-base'
   return isActive
@@ -25,8 +23,7 @@ export default function Layout() {
 
       <header className="border-b border-slate-200 bg-white">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
-          <Link to="/" className="flex items-center gap-2 rounded-md text-xl font-bold text-emerald-800">
-            <LogoIcon className="size-7" />
+          <Link to="/" className="rounded-md text-xl font-bold text-emerald-800">
             E-Cicla
           </Link>
           <nav aria-label="Principal">
