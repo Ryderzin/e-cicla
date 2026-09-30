@@ -1,25 +1,15 @@
 import type { ReactNode } from 'react'
 import { Link } from 'react-router'
 
-import {
-  ApplianceIcon,
-  BatteryIcon,
-  BoxIcon,
-  ChargerIcon,
-  ChecklistIcon,
-  LaptopIcon,
-  MapPinIcon,
-  PhoneIcon,
-  RecycleIcon,
-  WarningIcon,
-} from '../components/icons.tsx'
+import eWastePhoto from '../assets/lixo-eletronico.jpg'
+import { BoxIcon, ChecklistIcon, MapPinIcon } from '../components/icons.tsx'
 
-const EXAMPLES: { icon: ReactNode; label: string }[] = [
-  { icon: <PhoneIcon />, label: 'Celulares e tablets' },
-  { icon: <BatteryIcon />, label: 'Pilhas e baterias' },
-  { icon: <ChargerIcon />, label: 'Carregadores e cabos' },
-  { icon: <LaptopIcon />, label: 'Computadores, notebooks, teclados e mouses' },
-  { icon: <ApplianceIcon />, label: 'Eletrodomésticos pequenos, como liquidificador, secador de cabelo e ferro de passar' },
+const EXAMPLES = [
+  'Celulares e tablets',
+  'Pilhas e baterias',
+  'Carregadores e cabos',
+  'Computadores, notebooks, teclados e mouses',
+  'Eletrodomésticos pequenos, como liquidificador, secador de cabelo e ferro de passar',
 ]
 
 const STEPS: { icon: ReactNode; title: string; text: string }[] = [
@@ -73,22 +63,29 @@ export default function HomePage() {
       </section>
 
       <section aria-labelledby="o-que-e-titulo">
-        <div className="mx-auto max-w-6xl px-4 py-14">
-          <h2 id="o-que-e-titulo" className="text-2xl font-bold text-slate-900 md:text-3xl">
-            O que é lixo eletrônico?
-          </h2>
-          <p className="mt-3 max-w-2xl text-lg text-slate-700">
-            É todo aparelho elétrico ou eletrônico que quebrou, ficou velho ou que você não usa mais, e também as peças e
-            os acessórios dele. Alguns exemplos do dia a dia:
-          </p>
-          <ul className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {EXAMPLES.map(({ icon, label }) => (
-              <li key={label} className="flex items-start gap-3 rounded-xl border border-slate-200 p-4">
-                <span className="rounded-lg bg-emerald-100 p-2 text-emerald-800">{icon}</span>
-                <span className="pt-1.5 text-slate-800">{label}</span>
-              </li>
-            ))}
-          </ul>
+        <div className="mx-auto grid max-w-6xl items-center gap-10 px-4 py-14 md:grid-cols-2">
+          <div>
+            <h2 id="o-que-e-titulo" className="text-2xl font-bold text-slate-900 md:text-3xl">
+              O que é lixo eletrônico?
+            </h2>
+            <p className="mt-3 text-lg text-slate-700">
+              É todo aparelho elétrico ou eletrônico que quebrou, ficou velho ou que você não usa mais, e também as peças
+              e os acessórios dele. Alguns exemplos do dia a dia:
+            </p>
+            <ul className="mt-5 list-disc space-y-2 pl-6 text-lg text-slate-800 marker:text-emerald-700">
+              {EXAMPLES.map((example) => (
+                <li key={example}>{example}</li>
+              ))}
+            </ul>
+          </div>
+          <img
+            src={eWastePhoto}
+            alt="Celulares antigos, teclado, câmera digital, carregadores e placa de computador descartados"
+            width={1300}
+            height={736}
+            loading="lazy"
+            className="h-auto w-full rounded-xl shadow-sm"
+          />
         </div>
       </section>
 
@@ -100,24 +97,14 @@ export default function HomePage() {
           </h2>
           <div className="mt-6 grid gap-6 md:grid-cols-2">
             <div className="rounded-xl border border-amber-200 bg-white p-5">
-              <div className="flex items-center gap-3">
-                <span className="rounded-lg bg-amber-100 p-2 text-amber-800">
-                  <WarningIcon />
-                </span>
-                <h3 className="text-lg font-semibold text-slate-900">Pode contaminar o solo e a água</h3>
-              </div>
+              <h3 className="text-lg font-semibold text-slate-900">Pode contaminar o solo e a água</h3>
               <p className="mt-3 text-slate-700">
                 Muitos aparelhos têm substâncias tóxicas, como chumbo, mercúrio e cádmio. Jogados no lixo comum, eles vão
                 parar em lixões e aterros, onde essas substâncias podem se soltar e contaminar o solo e a água.
               </p>
             </div>
             <div className="rounded-xl border border-emerald-200 bg-white p-5">
-              <div className="flex items-center gap-3">
-                <span className="rounded-lg bg-emerald-100 p-2 text-emerald-800">
-                  <RecycleIcon />
-                </span>
-                <h3 className="text-lg font-semibold text-slate-900">No ponto de coleta, vira reciclagem</h3>
-              </div>
+              <h3 className="text-lg font-semibold text-slate-900">No ponto de coleta, vira reciclagem</h3>
               <p className="mt-3 text-slate-700">
                 Entregues num ponto de coleta, os aparelhos seguem para reciclagem: metais e plásticos podem ser
                 reaproveitados e as partes perigosas recebem o tratamento adequado.
