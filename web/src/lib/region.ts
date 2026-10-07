@@ -16,3 +16,12 @@ export const FATEC_ZONA_LESTE = {
   latitude: -23.5213425,
   longitude: -46.4760113,
 }
+
+export function isInsideRegion(latitude: number, longitude: number): boolean {
+  return (
+    latitude >= REGION_BOUNDS.minLat &&
+    latitude <= REGION_BOUNDS.maxLat &&
+    longitude >= REGION_BOUNDS.minLng &&
+    longitude <= REGION_BOUNDS.maxLng
+  )
+}

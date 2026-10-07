@@ -3,9 +3,17 @@ import { useEffect } from 'react'
 import { MapContainer, Marker, TileLayer, useMap, ZoomControl } from 'react-leaflet'
 
 import type { PointSummary } from '../api/points.ts'
-import fatecLogo from '../assets/fatec-zona-leste.png'
+import {
+  DEFAULT_ICON,
+  FATEC_ICON,
+  MAX_BOUNDS,
+  ORIGIN_ICON,
+  OSM_ATTRIBUTION,
+  OSM_TILES,
+  SELECTED_ICON,
+} from '../lib/leaflet.ts'
 import { UNNAMED_POINT } from '../lib/materials.ts'
-import { FATEC_ZONA_LESTE, REGION_BOUNDS } from '../lib/region.ts'
+import { FATEC_ZONA_LESTE } from '../lib/region.ts'
 
 // Same as Tailwind's "md" breakpoint, where the details panel moves to the right side.
 const DESKTOP_QUERY = '(min-width: 768px)'
@@ -13,54 +21,12 @@ const DESKTOP_QUERY = '(min-width: 768px)'
 // so the nearest points are still in view.
 const INITIAL_ZOOM_DESKTOP = 12
 const INITIAL_ZOOM_PHONE = 11
-// A little margin around the region so points on its edge are not stuck under the map controls.
-const MAX_BOUNDS = L.latLngBounds(
-  [REGION_BOUNDS.minLat, REGION_BOUNDS.minLng],
-  [REGION_BOUNDS.maxLat, REGION_BOUNDS.maxLng],
-).pad(0.05)
 // Size of the details panel (see PointDetailsPanel: md:w-96 and max-h-[65%]).
 const PANEL_WIDTH = 384
 const BOTTOM_SHEET_SHARE = 0.65
-
-// Pin drawn on a 30x42 grid, with a white circle on its head.
-function pinSvg(fill: string, width: number, circleRadius: number): string {
-  const height = pinHeight(width)
-  return (
-    `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 30 42" style="display:block">` +
-    '<path d="M15 1C7.3 1 1 7.2 1 14.9 1 25.3 15 41 15 41s14-15.7 14-26.1C29 7.2 22.7 1 15 1z" ' +
-    `fill="${fill}" stroke="#ffffff" stroke-width="2"/>` +
-    `<circle cx="15" cy="15" r="${circleRadius}" fill="#ffffff"/></svg>`
-  )
-}
-
-function pinHeight(width: number): number {
-  return Math.round((width * 42) / 30)
-}
-
-function pinIcon(fill: string, width: number): L.Icon {
-  return L.icon({
-    iconUrl: `data:image/svg+xml;charset=utf-8,${encodeURIComponent(pinSvg(fill, width, 5.5))}`,
-    iconSize: [width, pinHeight(width)],
-    iconAnchor: [width / 2, pinHeight(width)],
-  })
-}
-
-const DEFAULT_ICON = pinIcon('#047857', 30) // emerald-700
-const SELECTED_ICON = pinIcon('#b45309', 38) // amber-700
-
-// Our pin, larger, with the Fatec logo inside a bigger white circle on its head.
-const FATEC_ICON_WIDTH = 44
-const FATEC_LOGO_HEIGHT = 24
-const FATEC_ICON = L.divIcon({
-  className: '',
-  html:
-    pinSvg('#047857', FATEC_ICON_WIDTH, 11) +
-    // Centered on the circle, which sits at y = 15 on the 30x42 grid.
-    `<img src="${fatecLogo}" alt="${FATEC_ZONA_LESTE.name}" style="position:absolute;left:50%;transform:translateX(-50%);` +
-    `top:${Math.round((15 * FATEC_ICON_WIDTH) / 30 - FATEC_LOGO_HEIGHT / 2)}px;height:${FATEC_LOGO_HEIGHT}px">`,
-  iconSize: [FATEC_ICON_WIDTH, pinHeight(FATEC_ICON_WIDTH)],
-  iconAnchor: [FATEC_ICON_WIDTH / 2, pinHeight(FATEC_ICON_WIDTH)],
-})
+// Size of the nearby search box (see NearbySearch: md:w-[23rem], and up to about 45% of the height on phones).
+const SEARCH_WIDTH = 368
+const SEARCH_SHARE_PHONE = 0.45
 
 /** Stops zooming out past the level where the whole region fits on screen (it depends on the screen size). */
 function LimitZoomToRegion() {
@@ -82,12 +48,40 @@ function KeepSelectedVisible({ point }: { point: PointSummary | null }) {
     if (!point) {
       return
     }
-    // Leave room for the details panel so it does not cover the selected marker.
-    const paddingBottomRight: L.PointTuple = window.matchMedia(DESKTOP_QUERY).matches
+    // Leave room for the search box and the details panel so they do not cover the selected marker.
+    // On phones only the search field stays at the top while a point is selected.
+    const desktop = window.matchMedia(DESKTOP_QUERY).matches
+    const paddingTopLeft: L.PointTuple = desktop ? [SEARCH_WIDTH + 24, 24] : [24, 96]
+    const paddingBottomRight: L.PointTuple = desktop
       ? [PANEL_WIDTH + 24, 24]
       : [24, Math.round(map.getSize().y * BOTTOM_SHEET_SHARE) + 24]
-    map.panInside([point.latitude, point.longitude], { paddingTopLeft: [24, 48], paddingBottomRight })
+    map.panInside([point.latitude, point.longitude], { paddingTopLeft, paddingBottomRight })
   }, [map, point])
+  return null
+}
+
+/** Where a nearby search started and the points to keep in view, nearest first. */
+export interface MapFocus {
+  origin: { latitude: number; longitude: number }
+  points: PointSummary[]
+}
+
+/** Shows the search origin and its nearest points, leaving room for the search box and the details panel. */
+function FitToFocus({ focus }: { focus: MapFocus | null }) {
+  const map = useMap()
+  useEffect(() => {
+    if (!focus) {
+      return
+    }
+    const bounds = L.latLngBounds([[focus.origin.latitude, focus.origin.longitude]])
+    focus.points.slice(0, 3).forEach((point) => bounds.extend([point.latitude, point.longitude]))
+    const desktop = window.matchMedia(DESKTOP_QUERY).matches
+    map.fitBounds(bounds, {
+      paddingTopLeft: desktop ? [SEARCH_WIDTH + 40, 40] : [24, Math.round(map.getSize().y * SEARCH_SHARE_PHONE) + 24],
+      paddingBottomRight: [40, 40],
+      maxZoom: 15,
+    })
+  }, [map, focus])
   return null
 }
 
@@ -95,9 +89,10 @@ interface PointMapProps {
   points: PointSummary[]
   selected: PointSummary | null
   onSelect: (point: PointSummary) => void
+  focus: MapFocus | null
 }
 
-export default function PointMap({ points, selected, onSelect }: PointMapProps) {
+export default function PointMap({ points, selected, onSelect, focus }: PointMapProps) {
   const initialZoom = window.matchMedia(DESKTOP_QUERY).matches ? INITIAL_ZOOM_DESKTOP : INITIAL_ZOOM_PHONE
   return (
     <MapContainer
@@ -108,11 +103,9 @@ export default function PointMap({ points, selected, onSelect }: PointMapProps) 
       zoomControl={false}
       className="absolute inset-0 z-0"
     >
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
-      <ZoomControl position="topleft" zoomInTitle="Aproximar" zoomOutTitle="Afastar" />
+      <TileLayer attribution={OSM_ATTRIBUTION} url={OSM_TILES} />
+      {/* Bottom left: the top is taken by the search box. */}
+      <ZoomControl position="bottomleft" zoomInTitle="Aproximar" zoomOutTitle="Afastar" />
       {/* Reference marker, not a collection point: it does not open the details panel. */}
       <Marker
         position={[FATEC_ZONA_LESTE.latitude, FATEC_ZONA_LESTE.longitude]}
@@ -146,7 +139,18 @@ export default function PointMap({ points, selected, onSelect }: PointMapProps) 
           />
         )
       })}
+      {focus && (
+        // Reference only, like the Fatec marker; the search box says in words where the search started.
+        <Marker
+          position={[focus.origin.latitude, focus.origin.longitude]}
+          icon={ORIGIN_ICON}
+          interactive={false}
+          keyboard={false}
+          zIndexOffset={400}
+        />
+      )}
       <LimitZoomToRegion />
+      <FitToFocus focus={focus} />
       <KeepSelectedVisible point={selected} />
     </MapContainer>
   )

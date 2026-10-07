@@ -132,7 +132,11 @@ export default function PointDetailsPanel({ point, onClose }: PointDetailsPanelP
         <p className="text-sm text-slate-600">
           As informações podem mudar. Se puder, confirme com o local antes de ir.
           {state.status === 'success' && state.details.sourceType === 'OSM' && (
-            <> Dados do OpenStreetMap, um mapa feito de forma colaborativa.</>
+            <>
+              {' '}
+              Dados do OpenStreetMap, um mapa feito de forma colaborativa
+              {state.details.editedByTeam ? ', revisados pela equipe E-Cicla.' : '.'}
+            </>
           )}
           {state.status === 'success' && state.details.sourceType === 'MANUAL' && (
             <> Dados reunidos pela equipe E-Cicla a partir de fontes oficiais.</>

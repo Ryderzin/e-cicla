@@ -1,8 +1,9 @@
-import { type ReactNode, useCallback, useEffect, useState } from 'react'
+import { type ReactNode, useCallback, useEffect, useMemo, useState } from 'react'
 
 import { fetchPoints, type PointSummary } from '../api/points.ts'
+import NearbySearch, { type NearbyResults } from '../components/NearbySearch.tsx'
 import PointDetailsPanel from '../components/PointDetailsPanel.tsx'
-import PointMap from '../components/PointMap.tsx'
+import PointMap, { type MapFocus } from '../components/PointMap.tsx'
 import { REGION_BOUNDS } from '../lib/region.ts'
 
 type PointsState = { status: 'loading' } | { status: 'error' } | { status: 'success'; points: PointSummary[] }
@@ -13,6 +14,7 @@ export default function MapPage() {
   const [state, setState] = useState<PointsState>({ status: 'loading' })
   const [attempt, setAttempt] = useState(0)
   const [selected, setSelected] = useState<PointSummary | null>(null)
+  const [nearby, setNearby] = useState<NearbyResults | null>(null)
 
   useEffect(() => {
     const controller = new AbortController()
@@ -29,13 +31,24 @@ export default function MapPage() {
   const closeDetails = useCallback(() => setSelected(null), [])
 
   const points = state.status === 'success' ? state.points : NO_POINTS
+  const focus = useMemo<MapFocus | null>(
+    () => (nearby ? { origin: nearby.origin, points: nearby.points } : null),
+    [nearby],
+  )
+
+  const showNearby = useCallback((results: NearbyResults | null) => {
+    setNearby(results)
+    setSelected(null)
+  }, [])
 
   return (
     <div className="relative min-h-[28rem] flex-1">
       <title>Mapa de pontos de coleta | E-Cicla</title>
       <h1 className="sr-only">Mapa de pontos de coleta</h1>
 
-      <PointMap points={points} selected={selected} onSelect={setSelected} />
+      <PointMap points={points} selected={selected} onSelect={setSelected} focus={focus} />
+
+      <NearbySearch results={nearby} onResults={showNearby} selected={selected} onSelect={setSelected} />
 
       {state.status === 'loading' && (
         <MapMessage role="status">
@@ -89,7 +102,8 @@ export default function MapPage() {
 
 function MapMessage({ role, children }: { role: 'status' | 'alert'; children: ReactNode }) {
   return (
-    <div className="pointer-events-none absolute inset-x-0 top-4 z-[1050] flex justify-center px-4">
+    // At the bottom on phones, where the search box does not reach; at the top, beside it, on larger screens.
+    <div className="pointer-events-none absolute inset-x-0 bottom-8 z-[1050] flex justify-center px-4 md:top-4 md:bottom-auto md:pl-[24.5rem]">
       <div
         role={role}
         className="pointer-events-auto flex max-w-sm items-center gap-3 rounded-xl bg-white px-4 py-3 text-slate-900 shadow-lg"

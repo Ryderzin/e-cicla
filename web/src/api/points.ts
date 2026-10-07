@@ -1,4 +1,8 @@
+import { query, request } from './client.ts'
+
 export type Material = 'BATTERIES' | 'COMPUTERS' | 'MOBILE_PHONES' | 'ELECTRICAL_ITEMS' | 'SMALL_APPLIANCES'
+
+export type SourceType = 'OSM' | 'MANUAL'
 
 export interface PointSummary {
   id: string
@@ -15,18 +19,22 @@ export interface PointDetails extends PointSummary {
   openingHours: string | null
   operator: string | null
   notes: string | null
-  sourceType: 'OSM' | 'MANUAL' | null
+  sourceType: SourceType | null
+  /** True when the E-Cicla team reviewed or changed the point. */
+  editedByTeam: boolean
   updatedAt: string | null
 }
 
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8080'
+export interface NearbyPoint extends PointSummary {
+  /** Straight-line distance from the searched location. */
+  distanceMeters: number
+}
 
-async function getJson<T>(path: string, signal?: AbortSignal): Promise<T> {
-  const response = await fetch(`${API_URL}${path}`, { signal })
-  if (!response.ok) {
-    throw new Error(`GET ${path} failed with status ${response.status}`)
-  }
-  return (await response.json()) as T
+/** A place found from an address typed by the user. */
+export interface Place {
+  latitude: number
+  longitude: number
+  label: string | null
 }
 
 /** Rectangular area of the map, in degrees. */
@@ -38,17 +46,23 @@ export interface Area {
 }
 
 export function fetchPoints(area?: Area, signal?: AbortSignal): Promise<PointSummary[]> {
-  const query = area
-    ? `?${new URLSearchParams({
-        minLng: String(area.minLng),
-        minLat: String(area.minLat),
-        maxLng: String(area.maxLng),
-        maxLat: String(area.maxLat),
-      })}`
-    : ''
-  return getJson<PointSummary[]>(`/api/points${query}`, signal)
+  return request<PointSummary[]>(`/api/points${query({ ...area })}`, { signal })
 }
 
 export function fetchPoint(id: string, signal?: AbortSignal): Promise<PointDetails> {
-  return getJson<PointDetails>(`/api/points/${encodeURIComponent(id)}`, signal)
+  return request<PointDetails>(`/api/points/${encodeURIComponent(id)}`, { signal })
+}
+
+export function fetchNearbyPoints(
+  latitude: number,
+  longitude: number,
+  area: Area,
+  signal?: AbortSignal,
+): Promise<NearbyPoint[]> {
+  return request<NearbyPoint[]>(`/api/points/near${query({ latitude, longitude, limit: 5, ...area })}`, { signal })
+}
+
+/** Only searched when the user confirms (no search-as-you-type), as the address service asks. */
+export function searchPlace(text: string, area: Area, signal?: AbortSignal): Promise<Place> {
+  return request<Place>(`/api/geocode${query({ q: text, ...area })}`, { signal })
 }

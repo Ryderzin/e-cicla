@@ -68,3 +68,54 @@ export function RouteIcon(props: IconProps) {
     </Icon>
   )
 }
+
+export function MenuIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M4 6h16M4 12h16M4 18h16" />
+    </Icon>
+  )
+}
+
+export function SearchIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <circle cx="11" cy="11" r="7" />
+      <path d="m20 20-4-4" />
+    </Icon>
+  )
+}
+
+export function LocateIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <circle cx="12" cy="12" r="7" />
+      <circle cx="12" cy="12" r="2.5" />
+      <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
+    </Icon>
+  )
+}
+
+export function PlusIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M12 5v14M5 12h14" />
+    </Icon>
+  )
+}
+
+export function EditIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M4 20h4L19 9l-4-4L4 16z" />
+    </Icon>
+  )
+}
+
+export function BackIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M15 6l-6 6 6 6" />
+    </Icon>
+  )
+}
