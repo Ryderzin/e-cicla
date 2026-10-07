@@ -82,6 +82,35 @@ class AccountEndpointsTest {
     }
 
     @Test
+    void neverTakesTheProfileFromTheRequest() throws Exception {
+        // Administrators are made only in the database; the site cannot ask for it.
+        when(users.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(sessions.create(any())).thenReturn("token-novo");
+
+        mvc.perform(post("/api/auth/register").contentType(MediaType.APPLICATION_JSON).content("""
+                        {"name": "Ana", "email": "ana@exemplo.com", "password": "senha-segura-123", "acceptPrivacy": true,
+                         "role": "ADMIN"}
+                        """))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.account.role").value("USER"));
+
+        ArgumentCaptor<User> saved = ArgumentCaptor.forClass(User.class);
+        verify(users).save(saved.capture());
+        assertThat(saved.getValue().role()).isEqualTo(Role.USER);
+    }
+
+    @Test
+    void seesAProfileChangedInTheDatabaseOnTheNextRequest() throws Exception {
+        User promoted = new User("u1", "Ana", "ana@exemplo.com", "hash", Role.ADMIN, Instant.now(), Instant.now(),
+                Instant.now());
+        signedIn(promoted);
+
+        mvc.perform(get("/api/me").header("Authorization", "Bearer token-da-ana"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.role").value("ADMIN"));
+    }
+
+    @Test
     void requiresAcceptingThePrivacyPolicy() throws Exception {
         mvc.perform(post("/api/auth/register").contentType(MediaType.APPLICATION_JSON).content("""
                         {"name": "Ana", "email": "ana@exemplo.com", "password": "senha-segura-123", "acceptPrivacy": false}

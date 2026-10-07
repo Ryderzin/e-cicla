@@ -14,8 +14,8 @@ function Section({ id, title, children }: { id: string; title: string; children:
   )
 }
 
-// TODO: revisar texto. A equipe deve conferir esta política antes da publicação, completar o contato e
-// atualizá-la sempre que o E-Cicla passar a guardar dados novos (aparelhos, descartes, sugestões, notificações).
+// Texto revisado pela equipe em 07/10/2026. Atualize a política (e a data) sempre que o E-Cicla passar a guardar
+// dados novos (aparelhos, descartes, sugestões, notificações). TODO: definir o contato do projeto.
 export default function PrivacyPage() {
   return (
     <div className={PAGE}>
