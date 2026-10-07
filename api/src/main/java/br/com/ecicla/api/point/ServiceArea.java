@@ -28,10 +28,6 @@ public class ServiceArea {
         }
     }
 
-    ServiceArea(List<List<double[][]>> polygons) {
-        this.polygons = polygons;
-    }
-
     public boolean contains(double latitude, double longitude) {
         for (List<double[][]> rings : polygons) {
             if (insideRing(longitude, latitude, rings.getFirst())
