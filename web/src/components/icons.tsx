@@ -119,3 +119,66 @@ export function BackIcon(props: IconProps) {
     </Icon>
   )
 }
+
+export function BatteryIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <rect x="2" y="7" width="17" height="10" rx="2" />
+      <path d="M22 11v2M6 10v4M10 10v4" />
+    </Icon>
+  )
+}
+
+export function PhoneIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <rect x="7" y="2" width="10" height="20" rx="2" />
+      <path d="M11 18h2" />
+    </Icon>
+  )
+}
+
+export function LaptopIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <rect x="4" y="5" width="16" height="11" rx="1.5" />
+      <path d="M2 19h20" />
+    </Icon>
+  )
+}
+
+export function ApplianceIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M6 10h10l-1 10H7z" />
+      <path d="M8 10V7a3 3 0 0 1 6 0v3" />
+      <path d="M16 12h2a2 2 0 0 1 0 4h-2.4" />
+    </Icon>
+  )
+}
+
+export function PlugIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M9 2v6M15 2v6" />
+      <path d="M6 8h12v3a6 6 0 0 1-12 0z" />
+      <path d="M12 17v5" />
+    </Icon>
+  )
+}
+
+export function CheckIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M5 12l5 5L20 7" />
+    </Icon>
+  )
+}
+
+export function ChevronDownIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="m6 9 6 6 6-6" />
+    </Icon>
+  )
+}

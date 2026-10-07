@@ -1,14 +1,15 @@
-import { type FormEvent, useEffect, useRef, useState } from 'react'
+import { type FormEvent, useCallback, useEffect, useRef, useState } from 'react'
 
 import { isApiError } from '../api/client.ts'
 import { fetchNearbyPoints, type NearbyPoint, type PointSummary, searchPlace } from '../api/points.ts'
+import { type Coordinates, LocationError, locateDevice, type NearbyRequest, OUTSIDE_REGION } from '../lib/geolocation.ts'
 import { MATERIAL_LABELS, UNNAMED_POINT } from '../lib/materials.ts'
 import { isInsideRegion, REGION_BOUNDS } from '../lib/region.ts'
 import { formatDistance } from '../lib/text.ts'
 import { CloseIcon, LocateIcon, SearchIcon } from './icons.tsx'
 
 export interface NearbyResults {
-  origin: { latitude: number; longitude: number }
+  origin: Coordinates
   /** How the origin is described: "você" for the device's location, or the address found. */
   originLabel: string
   fromDevice: boolean
@@ -22,53 +23,95 @@ interface NearbySearchProps {
   onResults: (results: NearbyResults | null) => void
   selected: PointSummary | null
   onSelect: (point: PointSummary) => void
+  /** A search started on the home page, run as soon as the map opens. */
+  initialRequest?: NearbyRequest | null
 }
 
-const OUTSIDE_REGION = 'Por enquanto, o E-Cicla mostra apenas pontos de coleta do estado de São Paulo.'
-
-function geolocationMessage(error: GeolocationPositionError): string {
-  if (error.code === error.PERMISSION_DENIED) {
-    return 'O navegador não liberou a sua localização. Libere a permissão nas configurações do navegador ou busque por um endereço.'
-  }
-  return 'Não foi possível descobrir a sua localização. Tente de novo ou busque por um endereço.'
-}
+const ADDRESS_MESSAGE = 'Buscando o endereço…'
+const NEARBY_MESSAGE = 'Procurando os pontos mais perto de você…'
 
 /** Search box over the map: nearest points to the user's location or to a typed address. */
-export default function NearbySearch({ results, onResults, selected, onSelect }: NearbySearchProps) {
-  const [text, setText] = useState('')
-  const [state, setState] = useState<SearchState>({ status: 'idle' })
+export default function NearbySearch({ results, onResults, selected, onSelect, initialRequest }: NearbySearchProps) {
+  const [text, setText] = useState(initialRequest?.kind === 'address' ? initialRequest.text : '')
+  // Arriving with a search from the home page, the box starts already "searching".
+  const [state, setState] = useState<SearchState>(() =>
+    initialRequest
+      ? { status: 'working', message: initialRequest.kind === 'address' ? ADDRESS_MESSAGE : NEARBY_MESSAGE }
+      : { status: 'idle' },
+  )
   const controller = useRef<AbortController | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => () => controller.current?.abort(), [])
 
-  function start(message: string): AbortSignal {
+  // Each new search cancels the one still running.
+  const newSignal = useCallback((): AbortSignal => {
     controller.current?.abort()
     controller.current = new AbortController()
-    setState({ status: 'working', message })
     return controller.current.signal
-  }
+  }, [])
 
-  async function findNearby(
-    signal: AbortSignal,
-    origin: { latitude: number; longitude: number },
-    originLabel: string,
-    fromDevice: boolean,
-  ) {
-    const points = await fetchNearbyPoints(origin.latitude, origin.longitude, REGION_BOUNDS, signal)
-    if (!signal.aborted) {
-      setState({ status: 'idle' })
-      onResults({ origin, originLabel, fromDevice, points })
-    }
-  }
-
-  function fail(signal: AbortSignal, message: string) {
+  const fail = useCallback((signal: AbortSignal, message: string) => {
     if (!signal.aborted) {
       setState({ status: 'error', message })
     }
-  }
+  }, [])
 
-  async function searchAddress(event: FormEvent) {
+  const findNearby = useCallback(
+    async (signal: AbortSignal, origin: Coordinates, originLabel: string, fromDevice: boolean) => {
+      const points = await fetchNearbyPoints(origin.latitude, origin.longitude, REGION_BOUNDS, signal)
+      if (!signal.aborted) {
+        setState({ status: 'idle' })
+        onResults({ origin, originLabel, fromDevice, points })
+      }
+    },
+    [onResults],
+  )
+
+  const runAddress = useCallback(
+    async (signal: AbortSignal, query: string) => {
+      try {
+        const place = await searchPlace(query, REGION_BOUNDS, signal)
+        if (!isInsideRegion(place.latitude, place.longitude)) {
+          fail(signal, `Esse endereço fica fora do estado de São Paulo. ${OUTSIDE_REGION}`)
+          return
+        }
+        await findNearby(signal, place, place.label ?? query, false)
+      } catch (error) {
+        if (isApiError(error, 404)) {
+          fail(signal, 'Não encontramos esse endereço no estado de São Paulo. Confira o texto ou inclua a cidade, como em “Rua Exemplo, 100, Campinas”.')
+        } else if (isApiError(error, 503)) {
+          fail(signal, 'Muitas buscas ao mesmo tempo. Aguarde alguns segundos e tente de novo.')
+        } else {
+          fail(signal, 'Não foi possível buscar agora. Verifique sua conexão e tente de novo.')
+        }
+      }
+    },
+    [fail, findNearby],
+  )
+
+  const runFrom = useCallback(
+    async (signal: AbortSignal, origin: Coordinates) => {
+      try {
+        await findNearby(signal, origin, 'você', true)
+      } catch {
+        fail(signal, 'Não foi possível buscar os pontos agora. Verifique sua conexão e tente de novo.')
+      }
+    },
+    [fail, findNearby],
+  )
+
+  // A search started on the home page. Runs again after a remount (React's development check),
+  // because the cleanup above cancels the first run.
+  useEffect(() => {
+    if (initialRequest?.kind === 'address') {
+      void runAddress(newSignal(), initialRequest.text)
+    } else if (initialRequest?.kind === 'device') {
+      void runFrom(newSignal(), initialRequest)
+    }
+  }, [initialRequest, runAddress, runFrom, newSignal])
+
+  function submitAddress(event: FormEvent) {
     event.preventDefault()
     const query = text.trim()
     if (query.length < 3) {
@@ -76,51 +119,22 @@ export default function NearbySearch({ results, onResults, selected, onSelect }:
       inputRef.current?.focus()
       return
     }
-    const signal = start('Buscando o endereço…')
-    try {
-      const place = await searchPlace(query, REGION_BOUNDS, signal)
-      if (!isInsideRegion(place.latitude, place.longitude)) {
-        fail(signal, `Esse endereço fica fora do estado de São Paulo. ${OUTSIDE_REGION}`)
-        return
-      }
-      await findNearby(signal, place, place.label ?? query, false)
-    } catch (error) {
-      if (isApiError(error, 404)) {
-        fail(signal, 'Não encontramos esse endereço no estado de São Paulo. Confira o texto ou inclua a cidade, como em “Rua Exemplo, 100, Campinas”.')
-      } else if (isApiError(error, 503)) {
-        fail(signal, 'Muitas buscas ao mesmo tempo. Aguarde alguns segundos e tente de novo.')
-      } else {
-        fail(signal, 'Não foi possível buscar agora. Verifique sua conexão e tente de novo.')
-      }
-    }
+    setState({ status: 'working', message: ADDRESS_MESSAGE })
+    void runAddress(newSignal(), query)
   }
 
-  function searchNearMe() {
-    if (!('geolocation' in navigator)) {
-      setState({ status: 'error', message: 'Este navegador não informa a localização. Busque por um endereço.' })
-      return
+  async function searchNearMe() {
+    const signal = newSignal()
+    setState({ status: 'working', message: 'Buscando a sua localização…' })
+    try {
+      const origin = await locateDevice()
+      if (!signal.aborted) {
+        setState({ status: 'working', message: NEARBY_MESSAGE })
+        await runFrom(signal, origin)
+      }
+    } catch (error) {
+      fail(signal, error instanceof LocationError ? error.message : 'Não foi possível descobrir a sua localização.')
     }
-    const signal = start('Buscando a sua localização…')
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        if (signal.aborted) {
-          return
-        }
-        const origin = { latitude: position.coords.latitude, longitude: position.coords.longitude }
-        if (!isInsideRegion(origin.latitude, origin.longitude)) {
-          fail(signal, `Você está fora do estado de São Paulo. ${OUTSIDE_REGION}`)
-          return
-        }
-        setState({ status: 'working', message: 'Procurando os pontos mais perto de você…' })
-        try {
-          await findNearby(signal, origin, 'você', true)
-        } catch {
-          fail(signal, 'Não foi possível buscar os pontos agora. Verifique sua conexão e tente de novo.')
-        }
-      },
-      (error) => fail(signal, geolocationMessage(error)),
-      { enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 },
-    )
   }
 
   function clear() {
@@ -135,7 +149,7 @@ export default function NearbySearch({ results, onResults, selected, onSelect }:
   return (
     <div className="pointer-events-none absolute inset-x-3 top-3 z-[1050] md:right-auto md:w-[23rem]">
       <div className="pointer-events-auto rounded-xl bg-white p-2 shadow-lg">
-        <form role="search" aria-label="Pontos perto de um local" onSubmit={searchAddress} className="flex items-center gap-1.5">
+        <form role="search" aria-label="Pontos perto de um local" onSubmit={submitAddress} className="flex items-center gap-1.5">
           <label htmlFor="busca-endereco" className="sr-only">
             Endereço, bairro ou cidade
           </label>

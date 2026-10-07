@@ -20,3 +20,27 @@
 .leaflet-container {
   font: inherit;
 }
+
+/* Content that fades in when it scrolls into view (see components/Reveal.tsx). Without motion
+   preferences, or when printing, it is simply shown. */
+@media (prefers-reduced-motion: no-preference) {
+  .reveal {
+    opacity: 0;
+    transform: translateY(1.25rem);
+    transition:
+      opacity 0.6s ease,
+      transform 0.6s ease;
+  }
+
+  .reveal.is-visible {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media print {
+  .reveal {
+    opacity: 1;
+    transform: none;
+  }
+}

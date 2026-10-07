@@ -1,9 +1,11 @@
 import { type ReactNode, useCallback, useEffect, useMemo, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router'
 
 import { fetchPoints, type PointSummary } from '../api/points.ts'
 import NearbySearch, { type NearbyResults } from '../components/NearbySearch.tsx'
 import PointDetailsPanel from '../components/PointDetailsPanel.tsx'
 import PointMap, { type MapFocus } from '../components/PointMap.tsx'
+import type { NearbyRequest } from '../lib/geolocation.ts'
 import { REGION_BOUNDS } from '../lib/region.ts'
 
 type PointsState = { status: 'loading' } | { status: 'error' } | { status: 'success'; points: PointSummary[] }
@@ -15,6 +17,20 @@ export default function MapPage() {
   const [attempt, setAttempt] = useState(0)
   const [selected, setSelected] = useState<PointSummary | null>(null)
   const [nearby, setNearby] = useState<NearbyResults | null>(null)
+  // A search started on the home page travels in the navigation state, never in the address bar:
+  // it may be the user's own address or location.
+  const location = useLocation()
+  const navigate = useNavigate()
+  const [initialRequest] = useState<NearbyRequest | null>(
+    () => (location.state as { nearbyRequest?: NearbyRequest } | null)?.nearbyRequest ?? null,
+  )
+
+  // Consumed once: going back to the map later should not repeat the search.
+  useEffect(() => {
+    if (initialRequest) {
+      navigate('.', { replace: true, state: null })
+    }
+  }, [initialRequest, navigate])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -48,7 +64,13 @@ export default function MapPage() {
 
       <PointMap points={points} selected={selected} onSelect={setSelected} focus={focus} />
 
-      <NearbySearch results={nearby} onResults={showNearby} selected={selected} onSelect={setSelected} />
+      <NearbySearch
+        results={nearby}
+        onResults={showNearby}
+        selected={selected}
+        onSelect={setSelected}
+        initialRequest={initialRequest}
+      />
 
       {state.status === 'loading' && (
         <MapMessage role="status">
