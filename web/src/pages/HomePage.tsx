@@ -99,15 +99,7 @@ const TIPS: { title: string; text: string }[] = [
 ]
 
 // TODO: revisar texto.
-const QUESTIONS: { question: string; answer: ReactNode }[] = [
-  {
-    question: 'Preciso criar conta para usar o E-Cicla?',
-    answer: 'Não. O mapa, a busca e os detalhes dos pontos de coleta funcionam sem conta.',
-  },
-  {
-    question: 'O E-Cicla cobra alguma coisa?',
-    answer: 'Não. Usar o E-Cicla é grátis.',
-  },
+const QUESTIONS: { question: string; answer: string }[] = [
   {
     question: 'O ponto de coleta pode recusar meu aparelho?',
     answer:
@@ -119,24 +111,8 @@ const QUESTIONS: { question: string; answer: ReactNode }[] = [
       'De fontes públicas: o OpenStreetMap, um mapa feito de forma colaborativa, e informações divulgadas por prefeituras e outros órgãos públicos. A equipe do E-Cicla revisa e corrige os pontos.',
   },
   {
-    question: 'Por que só aparecem pontos do estado de São Paulo?',
-    answer: 'Por enquanto, o E-Cicla cobre apenas o estado de São Paulo.',
-  },
-  {
     question: 'As informações dos pontos estão sempre atualizadas?',
     answer: 'Horários e regras podem mudar. Se puder, confirme com o local antes de ir.',
-  },
-  {
-    question: 'O E-Cicla guarda a minha localização?',
-    answer: (
-      <>
-        Não. A localização só é usada para encontrar os pontos mais próximos. Veja a{' '}
-        <Link to="/privacidade" className={TEXT_LINK}>
-          política de privacidade
-        </Link>
-        .
-      </>
-    ),
   },
 ]
 
@@ -259,7 +235,7 @@ export default function HomePage() {
       </section>
 
       <section aria-label="O E-Cicla em números" className="relative -mt-6 md:-mt-10">
-        <div className="mx-auto grid max-w-6xl grid-cols-3 gap-2 px-4 sm:gap-4">
+        <div className="mx-auto grid max-w-6xl grid-cols-2 gap-2 px-4 sm:gap-4">
           <Reveal className={STAT_CARD}>
             <PointsCount />
           </Reveal>
@@ -267,12 +243,6 @@ export default function HomePage() {
             <p>
               <span className={STAT_NUMBER}>{MATERIALS.length}</span>
               <span className={STAT_LABEL}>tipos de material para conferir em cada ponto</span>
-            </p>
-          </Reveal>
-          <Reveal className={STAT_CARD} delay={200}>
-            <p>
-              <span className={STAT_NUMBER}>Grátis</span>
-              <span className={STAT_LABEL}>e sem precisar criar conta</span>
             </p>
           </Reveal>
         </div>
