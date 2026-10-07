@@ -38,6 +38,10 @@ public record BoundingBox(double minLng, double minLat, double maxLng, double ma
         return Optional.of(new BoundingBox(minLng, minLat, maxLng, maxLat));
     }
 
+    public boolean contains(Point point) {
+        return point.getX() >= minLng && point.getX() <= maxLng && point.getY() >= minLat && point.getY() <= maxLat;
+    }
+
     public GeoJsonPolygon toPolygon() {
         Point southWest = new Point(minLng, minLat);
         return new GeoJsonPolygon(

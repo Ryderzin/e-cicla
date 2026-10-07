@@ -6,7 +6,7 @@ import java.util.Optional;
 import org.springframework.data.mongodb.core.geo.GeoJsonPolygon;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
-public interface CollectionPointRepository extends MongoRepository<CollectionPoint, String> {
+public interface CollectionPointRepository extends MongoRepository<CollectionPoint, String>, NearbyPointQueries {
 
     List<CollectionPoint> findByStatus(PointStatus status);
 

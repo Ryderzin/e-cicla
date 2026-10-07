@@ -232,8 +232,19 @@ public class PointImportService {
         return answered;
     }
 
-    private ImportResult upsert(Collection<ImportedPoint> points, int fromOsm, int fromSeed) {
-        Map<String, CollectionPoint> stored = findStored(points);
+    /** An administrator changed this point by hand; the import must not overwrite those changes. */
+    static boolean editedByAdmin(CollectionPoint stored) {
+        return stored != null && stored.adminEditedAt() != null;
+    }
+
+    private ImportResult upsert(Collection<ImportedPoint> allPoints, int fromOsm, int fromSeed) {
+        Map<String, CollectionPoint> stored = findStored(allPoints);
+        List<ImportedPoint> points = allPoints.stream()
+                .filter(p -> !editedByAdmin(stored.get(p.externalId())))
+                .toList();
+        if (points.size() < allPoints.size()) {
+            log.info("Keeping {} points edited by administrators as they are", allPoints.size() - points.size());
+        }
         Map<String, AddressAction> addressActions = new HashMap<>();
         points.forEach(p -> addressActions.put(p.externalId(), addressAction(p, stored.get(p.externalId()))));
         Map<String, Optional<String>> lookedUp = lookUpAddresses(points.stream()

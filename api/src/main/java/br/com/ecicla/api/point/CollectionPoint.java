@@ -11,6 +11,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
  * An electronic waste collection point. {@code location} is a GeoJSON point, so its coordinates are
  * stored as [longitude, latitude]. {@code addressApproximate} is true when the source had no address
  * and it was looked up from the coordinates ({@code address} stays null if nothing was found there).
+ * {@code adminEditedAt} is set when an administrator changes the point; the import then leaves it alone.
  */
 @Document(CollectionPoint.COLLECTION)
 public record CollectionPoint(
@@ -25,7 +26,8 @@ public record CollectionPoint(
         String notes,
         PointSource source,
         PointStatus status,
-        Instant updatedAt) {
+        Instant updatedAt,
+        Instant adminEditedAt) {
 
     public static final String COLLECTION = "collection_points";
 }

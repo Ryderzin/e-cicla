@@ -66,6 +66,6 @@ class AddressActionTest {
     private static CollectionPoint stored(double lon, double lat, String address, boolean approximate) {
         return new CollectionPoint("66fb1c2e8f1b2a3c4d5e6f70", null, new GeoJsonPoint(lon, lat), address, approximate,
                 List.of(Material.BATTERIES), null, null, null,
-                new PointSource(SourceType.OSM, "node/1", null), PointStatus.ACTIVE, null);
+                new PointSource(SourceType.OSM, "node/1", null), PointStatus.ACTIVE, null, null);
     }
 }

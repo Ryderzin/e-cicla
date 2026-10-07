@@ -1,10 +1,15 @@
-package br.com.ecicla.api.point;
+package br.com.ecicla.api.admin;
 
 import java.time.Instant;
 import java.util.List;
 
-/** Everything the user needs to decide whether to take a device to the point. */
-public record PointDetails(
+import br.com.ecicla.api.point.CollectionPoint;
+import br.com.ecicla.api.point.Material;
+import br.com.ecicla.api.point.PointStatus;
+import br.com.ecicla.api.point.SourceType;
+
+/** Everything an administrator sees about a point, active or not. */
+public record AdminPointView(
         String id,
         String name,
         double latitude,
@@ -16,11 +21,12 @@ public record PointDetails(
         String operator,
         String notes,
         SourceType sourceType,
-        boolean editedByTeam,
+        PointStatus status,
+        Instant adminEditedAt,
         Instant updatedAt) {
 
-    static PointDetails from(CollectionPoint point) {
-        return new PointDetails(
+    static AdminPointView from(CollectionPoint point) {
+        return new AdminPointView(
                 point.id(),
                 point.name(),
                 point.location().getY(),
@@ -32,7 +38,8 @@ public record PointDetails(
                 point.operator(),
                 point.notes(),
                 point.source() == null ? null : point.source().type(),
-                point.adminEditedAt() != null,
+                point.status(),
+                point.adminEditedAt(),
                 point.updatedAt());
     }
 }

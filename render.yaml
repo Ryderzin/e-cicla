@@ -24,6 +24,10 @@ services:
       # Ligar só para importar e desligar em seguida.
       - key: APP_IMPORT_ON_STARTUP
         value: "false"
+      # E-mails das contas de administrador, separados por vírgula. Crie a conta no site
+      # antes de incluir o e-mail aqui; a API só promove contas que já existem.
+      - key: APP_ADMIN_EMAILS
+        sync: false
 
   - type: web
     name: e-cicla
