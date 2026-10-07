@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react'
-import { Link } from 'react-router'
+import { Link, useLocation } from 'react-router'
 
 import eWastePhoto from '../assets/lixo-eletronico.jpg'
+import { Notice } from '../components/forms.tsx'
 import { BoxIcon, ChecklistIcon, MapPinIcon } from '../components/icons.tsx'
 
 const EXAMPLES = [
@@ -43,9 +44,17 @@ function MapButton() {
 }
 
 export default function HomePage() {
+  // Message from the page that sent people here, e.g. after deleting the account.
+  const message = (useLocation().state as { message?: string } | null)?.message
   return (
     <>
       <title>E-Cicla: onde descartar lixo eletrônico</title>
+
+      {message && (
+        <div className="mx-auto w-full max-w-6xl px-4 pt-6">
+          <Notice kind="success">{message}</Notice>
+        </div>
+      )}
 
       <section aria-labelledby="inicio-titulo" className="bg-emerald-50">
         <div className="mx-auto max-w-6xl px-4 py-16 md:py-24">
@@ -142,7 +151,10 @@ export default function HomePage() {
       <div className="border-t border-slate-200 bg-slate-50">
         <p className="mx-auto max-w-6xl px-4 py-6 text-sm text-slate-600">
           Os pontos de coleta vêm de fontes públicas: o OpenStreetMap, um mapa feito de forma colaborativa, e
-          informações divulgadas por prefeituras e outros órgãos públicos.
+          informações divulgadas por prefeituras e outros órgãos públicos.{' '}
+          <Link to="/privacidade" className="font-medium text-slate-700 underline underline-offset-4">
+            Política de privacidade
+          </Link>
         </p>
       </div>
     </>
