@@ -34,6 +34,7 @@ import com.mongodb.bulk.BulkWriteResult;
 
 import br.com.ecicla.api.point.CollectionPoint;
 import br.com.ecicla.api.point.PointStatus;
+import br.com.ecicla.api.point.ServiceArea;
 
 /**
  * Imports collection points from OpenStreetMap and from the manual seed file. Points are upserted by
@@ -55,6 +56,7 @@ public class PointImportService {
     private final ObjectMapper objectMapper;
     private final Resource seedFile;
     private final boolean lookUpMissingAddresses;
+    private final ServiceArea serviceArea;
 
     PointImportService(
             OverpassClient overpassClient,
@@ -62,13 +64,15 @@ public class PointImportService {
             MongoTemplate mongoTemplate,
             ObjectMapper objectMapper,
             @Value("${app.import.seed-file}") Resource seedFile,
-            @Value("${app.import.look-up-missing-addresses}") boolean lookUpMissingAddresses) {
+            @Value("${app.import.look-up-missing-addresses}") boolean lookUpMissingAddresses,
+            ServiceArea serviceArea) {
         this.overpassClient = overpassClient;
         this.nominatimClient = nominatimClient;
         this.mongoTemplate = mongoTemplate;
         this.objectMapper = objectMapper;
         this.seedFile = seedFile;
         this.lookUpMissingAddresses = lookUpMissingAddresses;
+        this.serviceArea = serviceArea;
     }
 
     public record ImportResult(int fromOsm, int fromSeed, int inserted, int updated) {
@@ -266,8 +270,11 @@ public class PointImportService {
                     .set("source.type", point.sourceType())
                     .set("source.importedAt", now)
                     .set("updatedAt", now)
-                    // Only new points start active; later changes by administrators are kept.
-                    .setOnInsert("status", PointStatus.ACTIVE);
+                    // Only new points get a status: active inside the area the platform covers, inactive
+                    // elsewhere. Later changes by administrators are kept.
+                    .setOnInsert("status", serviceArea.contains(point.latitude(), point.longitude())
+                            ? PointStatus.ACTIVE
+                            : PointStatus.INACTIVE);
             switch (addressActions.get(point.externalId())) {
                 case FROM_SOURCE -> update.set("address", point.address()).set("addressApproximate", false);
                 case KEEP_STORED -> {

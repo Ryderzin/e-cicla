@@ -28,6 +28,7 @@ import br.com.ecicla.api.point.CollectionPoint;
 import br.com.ecicla.api.point.Material;
 import br.com.ecicla.api.point.PointSource;
 import br.com.ecicla.api.point.PointStatus;
+import br.com.ecicla.api.point.ServiceAreaFixtures;
 import br.com.ecicla.api.point.SourceType;
 
 class ImportKeepsAdminEditsTest {
@@ -55,7 +56,8 @@ class ImportKeepsAdminEditsTest {
         when(mongo.bulkOps(any(BulkOperations.BulkMode.class), eq(CollectionPoint.class))).thenReturn(bulk);
         when(bulk.execute()).thenReturn(mock(BulkWriteResult.class));
         PointImportService service = new PointImportService(overpass, mock(NominatimClient.class), mongo,
-                new ObjectMapper(), new ByteArrayResource(SEED.getBytes(StandardCharsets.UTF_8)), false);
+                new ObjectMapper(), new ByteArrayResource(SEED.getBytes(StandardCharsets.UTF_8)), false,
+                ServiceAreaFixtures.saoPaulo());
 
         service.importAll();
 
@@ -64,6 +66,39 @@ class ImportKeepsAdminEditsTest {
         assertThat(queries.getAllValues()).hasSize(1);
         assertThat(queries.getValue().getQueryObject().getString("source.externalId")).isEqualTo("manual/intocado");
         verify(bulk, never()).updateOne(any(Query.class), any(Update.class));
+    }
+
+    @Test
+    void importsNewPointsOutsideTheStateAsInactive() throws Exception {
+        OverpassClient overpass = mock(OverpassClient.class);
+        when(overpass.fetchElements()).thenReturn(List.of());
+        MongoTemplate mongo = mock(MongoTemplate.class);
+        when(mongo.find(any(Query.class), eq(CollectionPoint.class))).thenReturn(List.of());
+        BulkOperations bulk = mock(BulkOperations.class);
+        when(mongo.bulkOps(any(BulkOperations.BulkMode.class), eq(CollectionPoint.class))).thenReturn(bulk);
+        when(bulk.execute()).thenReturn(mock(BulkWriteResult.class));
+        String seed = """
+                [
+                  {"externalId": "manual/sao-paulo", "name": "Em SP", "latitude": -23.5213, "longitude": -46.4760,
+                   "address": "Rua A, 1", "acceptedMaterials": ["BATTERIES"]},
+                  {"externalId": "manual/curitiba", "name": "Em Curitiba", "latitude": -25.4284, "longitude": -49.2733,
+                   "address": "Rua B, 2", "acceptedMaterials": ["BATTERIES"]}
+                ]
+                """;
+        PointImportService service = new PointImportService(overpass, mock(NominatimClient.class), mongo,
+                new ObjectMapper(), new ByteArrayResource(seed.getBytes(StandardCharsets.UTF_8)), false,
+                ServiceAreaFixtures.saoPaulo());
+
+        service.importAll();
+
+        ArgumentCaptor<Query> queries = ArgumentCaptor.forClass(Query.class);
+        ArgumentCaptor<Update> updates = ArgumentCaptor.forClass(Update.class);
+        verify(bulk, org.mockito.Mockito.times(2)).upsert(queries.capture(), updates.capture());
+        for (int i = 0; i < 2; i++) {
+            String id = queries.getAllValues().get(i).getQueryObject().getString("source.externalId");
+            Object status = updates.getAllValues().get(i).getUpdateObject().get("$setOnInsert", org.bson.Document.class).get("status");
+            assertThat(status).isEqualTo(id.equals("manual/sao-paulo") ? PointStatus.ACTIVE : PointStatus.INACTIVE);
+        }
     }
 
     @Test
