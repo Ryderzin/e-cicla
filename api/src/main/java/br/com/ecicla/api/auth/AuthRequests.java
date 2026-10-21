@@ -18,6 +18,15 @@ final class AuthRequests {
     record UpdateProfile(String name) {
     }
 
+    record ForgotPassword(String email) {
+    }
+
+    record ResetPassword(String token, String password) {
+    }
+
+    record MessageResponse(String message) {
+    }
+
     record SessionResponse(String token, AccountView account) {
     }
 }

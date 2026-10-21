@@ -46,6 +46,9 @@ class AccountEndpointsTest {
     @MockitoBean
     private SessionService sessions;
 
+    @MockitoBean
+    private EmailService emailService;
+
     private User user(String password) {
         return new User("u1", "Ana", "ana@exemplo.com", hasher.hash(password), Role.USER,
                 Instant.now(), Instant.now(), Instant.now());
@@ -259,5 +262,96 @@ class AccountEndpointsTest {
 
         mvc.perform(get("/api/me").header("Authorization", "Basic token-da-ana")).andExpect(status().isUnauthorized());
         verify(sessions, never()).authenticate(eq("token-da-ana"));
+    }
+
+    @Test
+    void requestsPasswordResetAndDispatchesEmail() throws Exception {
+        User ana = user("senha-segura-123");
+        when(users.findByEmail("ana@exemplo.com")).thenReturn(Optional.of(ana));
+        when(users.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        mvc.perform(post("/api/auth/forgot-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\": \" Ana@Exemplo.com \"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").isNotEmpty());
+
+        ArgumentCaptor<User> savedCaptor = ArgumentCaptor.forClass(User.class);
+        verify(users).save(savedCaptor.capture());
+        User savedUser = savedCaptor.getValue();
+        assertThat(savedUser.passwordReset()).isNotNull();
+        assertThat(savedUser.passwordReset().tokenHash()).isNotEmpty();
+
+        verify(emailService).sendPasswordReset(eq("ana@exemplo.com"), eq("Ana"), anyString());
+    }
+
+    @Test
+    void requestsPasswordResetForNonExistentEmailReturnsSuccessSilently() throws Exception {
+        when(users.findByEmail("inexistente@exemplo.com")).thenReturn(Optional.empty());
+
+        mvc.perform(post("/api/auth/forgot-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\": \"inexistente@exemplo.com\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").isNotEmpty());
+
+        verify(users, never()).save(any());
+        verify(emailService, never()).sendPasswordReset(anyString(), anyString(), anyString());
+    }
+
+    @Test
+    void resetsPasswordWithValidToken() throws Exception {
+        String rawToken = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
+        String tokenHash = SessionService.hash(rawToken);
+        User ana = new User("u1", "Ana", "ana@exemplo.com", hasher.hash("senha-antiga"), Role.USER,
+                Instant.now(), Instant.now(), Instant.now(),
+                new PasswordReset(tokenHash, Instant.now().plusSeconds(3600)));
+
+        when(users.findByPasswordResetTokenHash(tokenHash)).thenReturn(Optional.of(ana));
+        when(users.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        mvc.perform(post("/api/auth/reset-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"token": "%s", "password": "nova-senha-segura-123"}
+                                """.formatted(rawToken)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").isNotEmpty());
+
+        ArgumentCaptor<User> savedCaptor = ArgumentCaptor.forClass(User.class);
+        verify(users).save(savedCaptor.capture());
+        User savedUser = savedCaptor.getValue();
+        assertThat(savedUser.passwordReset()).isNull();
+        assertThat(hasher.matches("nova-senha-segura-123", savedUser.passwordHash())).isTrue();
+
+        verify(sessions).revokeAll("u1");
+    }
+
+    @Test
+    void rejectsPasswordResetWhenTokenIsExpiredOrInvalid() throws Exception {
+        String rawToken = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
+        String tokenHash = SessionService.hash(rawToken);
+
+        // Expired token
+        User anaExpired = new User("u1", "Ana", "ana@exemplo.com", hasher.hash("senha-antiga"), Role.USER,
+                Instant.now(), Instant.now(), Instant.now(),
+                new PasswordReset(tokenHash, Instant.now().minusSeconds(10)));
+        when(users.findByPasswordResetTokenHash(tokenHash)).thenReturn(Optional.of(anaExpired));
+
+        mvc.perform(post("/api/auth/reset-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"token": "%s", "password": "nova-senha-segura-123"}
+                                """.formatted(rawToken)))
+                .andExpect(status().isBadRequest());
+
+        // Token not found
+        when(users.findByPasswordResetTokenHash(anyString())).thenReturn(Optional.empty());
+        mvc.perform(post("/api/auth/reset-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"token": "token-inexistente", "password": "nova-senha-segura-123"}
+                                """))
+                .andExpect(status().isBadRequest());
     }
 }

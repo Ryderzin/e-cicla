@@ -8,5 +8,7 @@ public interface UserRepository extends MongoRepository<User, String> {
 
     Optional<User> findByEmail(String email);
 
+    Optional<User> findByPasswordResetTokenHash(String tokenHash);
+
     boolean existsByEmail(String email);
 }

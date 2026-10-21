@@ -7,8 +7,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import br.com.ecicla.api.auth.AuthRequests.ForgotPassword;
 import br.com.ecicla.api.auth.AuthRequests.Login;
+import br.com.ecicla.api.auth.AuthRequests.MessageResponse;
 import br.com.ecicla.api.auth.AuthRequests.Register;
+import br.com.ecicla.api.auth.AuthRequests.ResetPassword;
 import br.com.ecicla.api.auth.AuthRequests.SessionResponse;
 
 @RestController
@@ -33,6 +36,20 @@ public class AuthController {
     @PostMapping("/login")
     public SessionResponse login(@RequestBody Login request) {
         return accounts.login(request);
+    }
+
+    /** Requests password reset instructions to be sent to the given e-mail. */
+    @PostMapping("/forgot-password")
+    public MessageResponse forgotPassword(@RequestBody ForgotPassword request) {
+        accounts.requestPasswordReset(request);
+        return new MessageResponse("Se houver uma conta cadastrada com este e-mail, enviamos as instruções para redefinição de senha.");
+    }
+
+    /** Resets the account password using the token sent by e-mail. */
+    @PostMapping("/reset-password")
+    public MessageResponse resetPassword(@RequestBody ResetPassword request) {
+        accounts.resetPassword(request);
+        return new MessageResponse("Sua senha foi redefinida com sucesso. Você já pode entrar com a nova senha.");
     }
 
     /** Ends the session of the token that made the request. */

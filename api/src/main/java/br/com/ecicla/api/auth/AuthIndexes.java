@@ -26,7 +26,10 @@ class AuthIndexes implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) {
-        mongoTemplate.indexOps(User.class).createIndex(new Index().on("email", Sort.Direction.ASC).unique());
+        var userIndexes = mongoTemplate.indexOps(User.class);
+        userIndexes.createIndex(new Index().on("email", Sort.Direction.ASC).unique());
+        userIndexes.createIndex(new Index().on("passwordReset.tokenHash", Sort.Direction.ASC).sparse());
+
         var sessions = mongoTemplate.indexOps(Session.class);
         sessions.createIndex(new Index().on("tokenHash", Sort.Direction.ASC).unique());
         sessions.createIndex(new Index().on("userId", Sort.Direction.ASC));

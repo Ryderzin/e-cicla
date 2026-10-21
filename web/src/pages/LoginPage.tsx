@@ -1,5 +1,5 @@
 import { type FormEvent, useRef, useState } from 'react'
-import { Link, Navigate, useNavigate, useSearchParams } from 'react-router'
+import { Link, Navigate, useLocation, useNavigate, useSearchParams } from 'react-router'
 
 import { isApiError } from '../api/client.ts'
 import { useAuth } from '../auth/useAuth.ts'
@@ -10,8 +10,11 @@ import { PAGE, PRIMARY_BUTTON, SECONDARY_BUTTON } from '../lib/ui.ts'
 export default function LoginPage() {
   const { status, login, sessionExpired } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
   const [params] = useSearchParams()
   const next = safeNext(params.get('voltar'))
+  const stateMessage = (location.state as { message?: string } | null)?.message ?? null
+
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -53,7 +56,13 @@ export default function LoginPage() {
           Entre para usar as funções da sua conta. Para consultar o mapa de pontos, não é preciso entrar.
         </p>
 
-        {sessionExpired && !error && (
+        {stateMessage && !error && (
+          <div className="mt-6">
+            <Notice kind="success">{stateMessage}</Notice>
+          </div>
+        )}
+
+        {sessionExpired && !error && !stateMessage && (
           <div className="mt-6">
             <Notice kind="info">Sua sessão terminou. Entre de novo para continuar.</Notice>
           </div>
@@ -70,14 +79,24 @@ export default function LoginPage() {
             onChange={(event) => setEmail(event.target.value)}
             required
           />
-          <TextField
-            label="Senha"
-            type="password"
-            autoComplete="current-password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            required
-          />
+          <div className="space-y-1.5">
+            <TextField
+              label="Senha"
+              type="password"
+              autoComplete="current-password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              required
+            />
+            <div className="flex justify-end">
+              <Link
+                to="/esqueci-minha-senha"
+                className="text-sm font-semibold text-emerald-800 underline underline-offset-4 hover:text-emerald-950"
+              >
+                Esqueci minha senha
+              </Link>
+            </div>
+          </div>
           <button type="submit" disabled={sending} className={`${PRIMARY_BUTTON} w-full`}>
             {sending ? 'Entrando…' : 'Entrar'}
           </button>

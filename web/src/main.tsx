@@ -13,12 +13,14 @@ import AdminPointFormPage from './pages/AdminPointFormPage.tsx'
 import AdminPointsPage from './pages/AdminPointsPage.tsx'
 import AdminSuggestionReviewPage from './pages/AdminSuggestionReviewPage.tsx'
 import AdminSuggestionsPage from './pages/AdminSuggestionsPage.tsx'
+import ForgotPasswordPage from './pages/ForgotPasswordPage.tsx'
 import HomePage from './pages/HomePage.tsx'
 import LoginPage from './pages/LoginPage.tsx'
 import MapPage from './pages/MapPage.tsx'
 import NotFoundPage from './pages/NotFoundPage.tsx'
 import PrivacyPage from './pages/PrivacyPage.tsx'
 import RegisterPage from './pages/RegisterPage.tsx'
+import ResetPasswordPage from './pages/ResetPasswordPage.tsx'
 import SuggestionFormPage from './pages/SuggestionFormPage.tsx'
 import SuggestionsPage from './pages/SuggestionsPage.tsx'
 
@@ -33,6 +35,8 @@ const router = createBrowserRouter([
       { path: 'sugestoes/nova', element: <SuggestionFormPage /> },
       { path: 'sugestoes/:id/editar', element: <SuggestionFormPage key="editar" /> },
       { path: 'entrar', element: <LoginPage /> },
+      { path: 'esqueci-minha-senha', element: <ForgotPasswordPage /> },
+      { path: 'redefinir-senha', element: <ResetPasswordPage /> },
       { path: 'criar-conta', element: <RegisterPage /> },
       { path: 'conta', element: <AccountPage /> },
       { path: 'privacidade', element: <PrivacyPage /> },

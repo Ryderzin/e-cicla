@@ -1,19 +1,25 @@
 package br.com.ecicla.api.auth;
 
+import java.security.SecureRandom;
+import java.time.Duration;
 import java.time.Instant;
+import java.util.HexFormat;
 import java.util.Locale;
 import java.util.regex.Pattern;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import br.com.ecicla.api.auth.AuthRequests.ForgotPassword;
 import br.com.ecicla.api.auth.AuthRequests.Login;
 import br.com.ecicla.api.auth.AuthRequests.Register;
+import br.com.ecicla.api.auth.AuthRequests.ResetPassword;
 import br.com.ecicla.api.auth.AuthRequests.SessionResponse;
 
-/** Creating accounts, signing in and deleting accounts. */
+/** Creating accounts, signing in, password recovery and deleting accounts. */
 @Service
 public class AccountService {
 
@@ -27,12 +33,22 @@ public class AccountService {
     private final UserRepository users;
     private final PasswordHasher hasher;
     private final SessionService sessions;
+    private final EmailService emailService;
+    private final String frontendUrl;
     private final String dummyHash;
+    private final SecureRandom random = new SecureRandom();
 
-    public AccountService(UserRepository users, PasswordHasher hasher, SessionService sessions) {
+    public AccountService(
+            UserRepository users,
+            PasswordHasher hasher,
+            SessionService sessions,
+            EmailService emailService,
+            @Value("${app.frontend.url:http://localhost:5173}") String frontendUrl) {
         this.users = users;
         this.hasher = hasher;
         this.sessions = sessions;
+        this.emailService = emailService;
+        this.frontendUrl = frontendUrl.replaceAll("/+$", "");
         this.dummyHash = hasher.dummyHash();
     }
 
@@ -58,7 +74,7 @@ public class AccountService {
         Instant now = Instant.now();
         User user;
         try {
-            user = users.save(new User(null, name, email, hasher.hash(password), Role.USER, now, now, now));
+            user = users.save(new User(null, name, email, hasher.hash(password), Role.USER, now, now, now, null));
         } catch (DuplicateKeyException e) {
             // Two sign-ups with the same e-mail at the same moment: the unique index lets only one through.
             throw emailInUse();
@@ -94,8 +110,76 @@ public class AccountService {
                 current.role(),
                 current.privacyAcceptedAt(),
                 current.createdAt(),
-                Instant.now()));
+                Instant.now(),
+                current.passwordReset()));
         return AccountView.from(updated);
+    }
+
+    /** Generates a password reset token and sends an email if the account exists. */
+    public void requestPasswordReset(ForgotPassword request) {
+        String email = normalizeEmail(request.email());
+        if (email == null || email.length() > EMAIL_MAX || !EMAIL.matcher(email).matches()) {
+            return;
+        }
+        User user = users.findByEmail(email).orElse(null);
+        if (user == null) {
+            return;
+        }
+
+        byte[] bytes = new byte[32];
+        random.nextBytes(bytes);
+        String rawToken = HexFormat.of().formatHex(bytes);
+        String tokenHash = SessionService.hash(rawToken);
+
+        Instant expiresAt = Instant.now().plus(Duration.ofHours(1));
+        User updated = new User(
+                user.id(),
+                user.name(),
+                user.email(),
+                user.passwordHash(),
+                user.role(),
+                user.privacyAcceptedAt(),
+                user.createdAt(),
+                Instant.now(),
+                new PasswordReset(tokenHash, expiresAt));
+        users.save(updated);
+
+        String resetUrl = frontendUrl + "/redefinir-senha?token=" + rawToken;
+        emailService.sendPasswordReset(user.email(), user.name(), resetUrl);
+    }
+
+    /** Resets the password using a valid, unexpired token. */
+    public void resetPassword(ResetPassword request) {
+        String token = trimmed(request.token());
+        if (token == null || token.isBlank()) {
+            throw badRequest("O token de redefinição é obrigatório.");
+        }
+        String password = request.password();
+        if (password == null || password.length() < PASSWORD_MIN || password.length() > PASSWORD_MAX) {
+            throw badRequest("A nova senha deve ter entre " + PASSWORD_MIN + " e " + PASSWORD_MAX + " caracteres.");
+        }
+
+        String tokenHash = SessionService.hash(token);
+        User user = users.findByPasswordResetTokenHash(tokenHash)
+                .orElseThrow(() -> badRequest("Token de redefinição inválido ou não encontrado."));
+
+        if (user.passwordReset() == null || user.passwordReset().isExpired(Instant.now())) {
+            throw badRequest("Este link de redefinição expirou. Solicite um novo link.");
+        }
+
+        User updated = new User(
+                user.id(),
+                user.name(),
+                user.email(),
+                hasher.hash(password),
+                user.role(),
+                user.privacyAcceptedAt(),
+                user.createdAt(),
+                Instant.now(),
+                null);
+        users.save(updated);
+
+        sessions.revokeAll(user.id());
     }
 
     /** Deletes the account and signs it out everywhere, after confirming the password. */

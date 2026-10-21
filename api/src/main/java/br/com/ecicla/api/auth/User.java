@@ -20,7 +20,20 @@ public record User(
         Role role,
         Instant privacyAcceptedAt,
         Instant createdAt,
-        Instant updatedAt) {
+        Instant updatedAt,
+        PasswordReset passwordReset) {
 
     public static final String COLLECTION = "users";
+
+    public User(
+            String id,
+            String name,
+            String email,
+            String passwordHash,
+            Role role,
+            Instant privacyAcceptedAt,
+            Instant createdAt,
+            Instant updatedAt) {
+        this(id, name, email, passwordHash, role, privacyAcceptedAt, createdAt, updatedAt, null);
+    }
 }

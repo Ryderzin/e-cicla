@@ -47,6 +47,20 @@ export function updateAccountName(name: string): Promise<Account> {
   return request<Account>('/api/me', { method: 'PUT', body: { name } })
 }
 
+export function requestPasswordReset(email: string): Promise<{ message: string }> {
+  return request<{ message: string }>('/api/auth/forgot-password', {
+    method: 'POST',
+    body: { email },
+  })
+}
+
+export function resetPassword(token: string, password: string): Promise<{ message: string }> {
+  return request<{ message: string }>('/api/auth/reset-password', {
+    method: 'POST',
+    body: { token, password },
+  })
+}
+
 export function deleteAccount(password: string): Promise<void> {
   return request<void>('/api/me', { method: 'DELETE', body: { password } })
 }
