@@ -20,7 +20,7 @@ public class EmailService {
 
     public EmailService(
             ObjectProvider<JavaMailSender> mailSenderProvider,
-            @Value("${app.mail.from:nao-responda@e-cicla.com.br}") String fromAddress) {
+            @Value("${app.mail.from:${spring.mail.username:nao-responda@e-cicla.com.br}}") String fromAddress) {
         this.mailSenderProvider = mailSenderProvider;
         this.fromAddress = fromAddress;
     }
@@ -68,7 +68,7 @@ public class EmailService {
             mailSender.send(message);
             log.info("E-mail de redefinição de senha enviado com sucesso para {}", toEmail);
         } catch (Exception e) {
-            log.error("Falha ao enviar e-mail de redefinição para {}: {}", toEmail, e.getMessage());
+            log.error("Falha ao enviar e-mail de redefinição para {}: {}", toEmail, e.getMessage(), e);
             log.warn("Link para contingência: {}", resetUrl);
         }
     }
