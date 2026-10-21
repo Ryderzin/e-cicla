@@ -11,12 +11,16 @@ import RequireAdmin from './components/RequireAdmin.tsx'
 import AccountPage from './pages/AccountPage.tsx'
 import AdminPointFormPage from './pages/AdminPointFormPage.tsx'
 import AdminPointsPage from './pages/AdminPointsPage.tsx'
+import AdminSuggestionReviewPage from './pages/AdminSuggestionReviewPage.tsx'
+import AdminSuggestionsPage from './pages/AdminSuggestionsPage.tsx'
 import HomePage from './pages/HomePage.tsx'
 import LoginPage from './pages/LoginPage.tsx'
 import MapPage from './pages/MapPage.tsx'
 import NotFoundPage from './pages/NotFoundPage.tsx'
 import PrivacyPage from './pages/PrivacyPage.tsx'
 import RegisterPage from './pages/RegisterPage.tsx'
+import SuggestionFormPage from './pages/SuggestionFormPage.tsx'
+import SuggestionsPage from './pages/SuggestionsPage.tsx'
 
 const router = createBrowserRouter([
   {
@@ -25,6 +29,9 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <HomePage /> },
       { path: 'mapa', element: <MapPage /> },
+      { path: 'sugestoes', element: <SuggestionsPage /> },
+      { path: 'sugestoes/nova', element: <SuggestionFormPage /> },
+      { path: 'sugestoes/:id/editar', element: <SuggestionFormPage key="editar" /> },
       { path: 'entrar', element: <LoginPage /> },
       { path: 'criar-conta', element: <RegisterPage /> },
       { path: 'conta', element: <AccountPage /> },
@@ -50,6 +57,22 @@ const router = createBrowserRouter([
         element: (
           <RequireAdmin>
             <AdminPointFormPage key="editar" />
+          </RequireAdmin>
+        ),
+      },
+      {
+        path: 'admin/sugestoes',
+        element: (
+          <RequireAdmin>
+            <AdminSuggestionsPage />
+          </RequireAdmin>
+        ),
+      },
+      {
+        path: 'admin/sugestoes/:id',
+        element: (
+          <RequireAdmin>
+            <AdminSuggestionReviewPage />
           </RequireAdmin>
         ),
       },

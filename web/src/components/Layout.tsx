@@ -25,6 +25,11 @@ function NavLinks() {
           Mapa de pontos
         </NavLink>
       </li>
+      <li>
+        <NavLink to="/sugestoes" className={navLinkClass}>
+          Sugestões
+        </NavLink>
+      </li>
       {account?.role === 'ADMIN' && (
         <li>
           <NavLink to="/admin/pontos" className={navLinkClass}>

@@ -11,7 +11,9 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 public class AuthWebConfig implements WebMvcConfigurer {
 
-    static final String[] SIGNED_IN = {"/api/me", "/api/me/**", "/api/auth/logout", "/api/admin/**"};
+    static final String[] SIGNED_IN = {
+            "/api/me", "/api/me/**", "/api/auth/logout", "/api/suggestions", "/api/suggestions/**", "/api/admin/**"
+    };
     static final String[] ADMIN = {"/api/admin/**"};
 
     private final AuthInterceptor authInterceptor;

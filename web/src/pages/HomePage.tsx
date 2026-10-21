@@ -50,7 +50,6 @@ const STEPS: { icon: ReactNode; title: string; text: string }[] = [
   },
 ]
 
-// TODO: revisar texto. Os mesmos tipos que aparecem em "Materiais aceitos" nos detalhes de cada ponto.
 const MATERIAL_CARDS: Record<Material, { icon: ReactNode; text: string }> = {
   BATTERIES: {
     icon: <BatteryIcon className="size-7" />,
@@ -74,7 +73,6 @@ const MATERIAL_CARDS: Record<Material, { icon: ReactNode; text: string }> = {
   },
 }
 
-// TODO: revisar texto.
 const TIPS: { title: string; text: string }[] = [
   {
     title: 'Guarde o que é importante',
@@ -98,7 +96,6 @@ const TIPS: { title: string; text: string }[] = [
   },
 ]
 
-// TODO: revisar texto.
 const QUESTIONS: { question: string; answer: string }[] = [
   {
     question: 'O ponto de coleta pode recusar meu aparelho?',
@@ -108,11 +105,12 @@ const QUESTIONS: { question: string; answer: string }[] = [
   {
     question: 'De onde vêm os pontos do mapa?',
     answer:
-      'De fontes públicas: o OpenStreetMap, um mapa feito de forma colaborativa, e informações divulgadas por prefeituras e outros órgãos públicos. A equipe do E-Cicla revisa e corrige os pontos.',
+      'De fontes públicas, como o OpenStreetMap e páginas de prefeituras, além de sugestões enviadas pelos próprios usuários. A equipe do E-Cicla analisa e verifica as informações antes de publicar.',
   },
   {
     question: 'As informações dos pontos estão sempre atualizadas?',
-    answer: 'Horários e regras podem mudar. Se puder, confirme com o local antes de ir.',
+    answer:
+      'Horários e regras podem mudar. Nos detalhes de cada ponto você pode ver quando ele foi verificado pela equipe e também enviar uma sugestão de correção.',
   },
 ]
 
@@ -400,18 +398,28 @@ export default function HomePage() {
         <Reveal className="mx-auto flex max-w-6xl flex-col items-start gap-6 px-4 py-14 md:flex-row md:items-center md:justify-between">
           <div>
             <h2 id="chamada-titulo" className="text-2xl font-bold text-white md:text-3xl">
-              Tem um aparelho parado em casa?
+              Tem um aparelho parado em casa ou conhece um ponto de coleta?
             </h2>
-            <p className="mt-2 text-lg text-emerald-50">Encontre agora o ponto de coleta mais perto de você.</p>
+            <p className="mt-2 text-lg text-emerald-50">
+              Encontre o ponto mais perto de você ou colabore sugerindo novos locais e correções.
+            </p>
           </div>
-          <MapButton inverted />
+          <div className="flex flex-wrap gap-3">
+            <MapButton inverted />
+            <Link
+              to="/sugestoes"
+              className="inline-flex items-center gap-2 rounded-lg border border-emerald-200 px-5 py-3 text-base font-semibold text-white hover:bg-emerald-700"
+            >
+              Sugerir ponto de coleta
+            </Link>
+          </div>
         </Reveal>
       </section>
 
       <div className="border-t border-slate-200 bg-slate-50">
         <p className="mx-auto max-w-6xl px-4 py-6 text-sm text-slate-600">
-          Os pontos de coleta vêm de fontes públicas: o OpenStreetMap, um mapa feito de forma colaborativa, e
-          informações divulgadas por prefeituras e outros órgãos públicos.{' '}
+          Os pontos de coleta vêm de fontes públicas (OpenStreetMap e órgãos públicos) e de sugestões da comunidade
+          verificadas pela equipe.{' '}
           <Link to="/privacidade" className="font-medium text-slate-700 underline underline-offset-4">
             Política de privacidade
           </Link>

@@ -1,15 +1,23 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation } from 'react-router'
 
-import { type AdminPoint, changePointStatus, fetchAdminPoints, type PointStatus } from '../api/admin.ts'
+import {
+  type AdminPoint,
+  changePointStatus,
+  deletePoint,
+  fetchAdminPoints,
+  type PointStatus,
+} from '../api/admin.ts'
+import AdminNav from '../components/AdminNav.tsx'
 import { Notice } from '../components/forms.tsx'
 import { EditIcon, PlusIcon } from '../components/icons.tsx'
 import { MATERIAL_LABELS, SOURCE_LABELS, UNNAMED_POINT } from '../lib/materials.ts'
 import { normalizeText } from '../lib/text.ts'
-import { INPUT, PAGE, PRIMARY_BUTTON } from '../lib/ui.ts'
+import { DANGER_BUTTON, INPUT, PAGE, PRIMARY_BUTTON, SECONDARY_BUTTON } from '../lib/ui.ts'
 
 type ListState = { status: 'loading' } | { status: 'error' } | { status: 'success'; points: AdminPoint[] }
 type StatusFilter = 'ALL' | PointStatus
+type PendingAction = { point: AdminPoint; kind: 'deactivate' | 'delete' }
 
 const FILTERS: { value: StatusFilter; label: string }[] = [
   { value: 'ALL', label: 'Todos' },
@@ -38,6 +46,7 @@ export default function AdminPointsPage() {
   const [filter, setFilter] = useState<StatusFilter>('ALL')
   const [message, setMessage] = useState<{ kind: 'success' | 'error'; text: string } | null>(null)
   const [busyId, setBusyId] = useState<string | null>(null)
+  const [pendingAction, setPendingAction] = useState<PendingAction | null>(null)
 
   useEffect(() => {
     const controller = new AbortController()
@@ -65,6 +74,7 @@ export default function AdminPointsPage() {
     const status: PointStatus = point.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE'
     const name = point.name ?? UNNAMED_POINT
     setBusyId(point.id)
+    setPendingAction(null)
     setMessage(null)
     try {
       const updated = await changePointStatus(point.id, status)
@@ -84,6 +94,29 @@ export default function AdminPointsPage() {
     }
   }
 
+  async function confirmDelete(point: AdminPoint) {
+    const name = point.name ?? UNNAMED_POINT
+    setBusyId(point.id)
+    setPendingAction(null)
+    setMessage(null)
+    try {
+      await deletePoint(point.id)
+      setState((current) =>
+        current.status === 'success'
+          ? { status: 'success', points: current.points.filter((p) => p.id !== point.id) }
+          : current,
+      )
+      setMessage({
+        kind: 'success',
+        text: `“${name}” foi excluído definitivamente.`,
+      })
+    } catch {
+      setMessage({ kind: 'error', text: `Não foi possível excluir “${name}”. Tente de novo.` })
+    } finally {
+      setBusyId(null)
+    }
+  }
+
   function actions(point: AdminPoint) {
     const name = point.name ?? UNNAMED_POINT
     return (
@@ -97,12 +130,26 @@ export default function AdminPointsPage() {
         </Link>
         <button
           type="button"
-          onClick={() => toggleStatus(point)}
+          onClick={() => {
+            if (point.status === 'ACTIVE') {
+              setPendingAction({ point, kind: 'deactivate' })
+            } else {
+              void toggleStatus(point)
+            }
+          }}
           disabled={busyId === point.id}
           className="font-semibold text-slate-700 underline underline-offset-4 hover:text-slate-950 disabled:text-slate-400"
         >
           {point.status === 'ACTIVE' ? 'Desativar' : 'Reativar'}
           <span className="sr-only"> {name}</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setPendingAction({ point, kind: 'delete' })}
+          disabled={busyId === point.id}
+          className="font-semibold text-red-800 underline underline-offset-4 hover:text-red-950 disabled:text-slate-400"
+        >
+          Excluir<span className="sr-only"> {name}</span>
         </button>
       </div>
     )
@@ -111,10 +158,12 @@ export default function AdminPointsPage() {
   return (
     <div className={PAGE}>
       <title>Pontos de coleta | Administração | E-Cicla</title>
+      <AdminNav />
+
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-slate-900">Pontos de coleta</h1>
-          <p className="mt-1 text-lg text-slate-700">Cadastre, corrija e desative os pontos que aparecem no mapa.</p>
+          <p className="mt-1 text-lg text-slate-700">Cadastre, corrija, desative ou exclua os pontos que aparecem no mapa.</p>
         </div>
         <Link to="/admin/pontos/novo" className={PRIMARY_BUTTON}>
           <PlusIcon className="size-5" />
@@ -125,6 +174,45 @@ export default function AdminPointsPage() {
       <div className="mt-6 space-y-3">
         {savedMessage && !message && <Notice kind="success">{savedMessage}</Notice>}
         {message && <Notice kind={message.kind}>{message.text}</Notice>}
+        {pendingAction && (
+          <div
+            role="region"
+            aria-label="Confirmação"
+            className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-slate-900"
+          >
+            <p className="font-semibold">
+              {pendingAction.kind === 'deactivate'
+                ? `Desativar “${pendingAction.point.name ?? UNNAMED_POINT}”?`
+                : `Excluir definitivamente “${pendingAction.point.name ?? UNNAMED_POINT}”?`}
+            </p>
+            <p className="mt-1 text-slate-700">
+              {pendingAction.kind === 'deactivate'
+                ? 'O ponto sairá do mapa público, mas continuará guardado e poderá ser reativado depois.'
+                : 'O ponto será apagado do banco de dados e esta ação não poderá ser desfeita.'}
+            </p>
+            <div className="mt-3 flex flex-wrap gap-3">
+              <button
+                type="button"
+                disabled={busyId === pendingAction.point.id}
+                onClick={() =>
+                  pendingAction.kind === 'deactivate'
+                    ? void toggleStatus(pendingAction.point)
+                    : void confirmDelete(pendingAction.point)
+                }
+                className={pendingAction.kind === 'delete' ? DANGER_BUTTON : PRIMARY_BUTTON}
+              >
+                {pendingAction.kind === 'deactivate' ? 'Sim, desativar ponto' : 'Sim, excluir definitivamente'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setPendingAction(null)}
+                className={SECONDARY_BUTTON}
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="mt-6 flex flex-col gap-3 md:flex-row md:items-end">
@@ -216,7 +304,7 @@ export default function AdminPointsPage() {
                   </td>
                   <td className="py-3 pr-3 text-slate-700">
                     {point.sourceType ? SOURCE_LABELS[point.sourceType] : '—'}
-                    {point.adminEditedAt && point.sourceType !== 'MANUAL' && (
+                    {point.adminEditedAt && point.sourceType === 'OSM' && (
                       <span className="block text-sm text-slate-600">revisado pela equipe</span>
                     )}
                   </td>
@@ -243,7 +331,7 @@ export default function AdminPointsPage() {
                 </p>
                 <p className="mt-1 text-sm text-slate-600">
                   Origem: {point.sourceType ? SOURCE_LABELS[point.sourceType] : '—'}
-                  {point.adminEditedAt && point.sourceType !== 'MANUAL' && ', revisado pela equipe'}
+                  {point.adminEditedAt && point.sourceType === 'OSM' && ', revisado pela equipe'}
                 </p>
                 <div className="mt-3">{actions(point)}</div>
               </li>

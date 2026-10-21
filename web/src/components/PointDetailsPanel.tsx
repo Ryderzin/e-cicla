@@ -1,16 +1,26 @@
 import { useEffect, useRef, useState } from 'react'
+import { Link } from 'react-router'
 
 import { fetchPoint, type PointDetails, type PointSummary } from '../api/points.ts'
 import { directionsUrl } from '../lib/directions.ts'
 import { MATERIAL_LABELS, UNNAMED_POINT } from '../lib/materials.ts'
 import { parseOpeningHours } from '../lib/openingHours.ts'
-import { CloseIcon, RouteIcon } from './icons.tsx'
+import { SECONDARY_BUTTON } from '../lib/ui.ts'
+import { CloseIcon, EditIcon, RouteIcon } from './icons.tsx'
 
 type DetailsState = { status: 'loading' } | { status: 'error' } | { status: 'success'; details: PointDetails }
 
 interface PointDetailsPanelProps {
   point: PointSummary
   onClose: () => void
+}
+
+function formatDate(iso: string): string {
+  return new Date(iso).toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  })
 }
 
 /**
@@ -118,30 +128,50 @@ export default function PointDetailsPanel({ point, onClose }: PointDetailsPanelP
 
         {state.status === 'success' && <DetailsList details={state.details} />}
 
-        <a
-          href={directionsUrl(point.latitude, point.longitude)}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-700 px-4 py-3 font-semibold text-white shadow-sm hover:bg-emerald-800"
-        >
-          <RouteIcon className="size-5" />
-          Como chegar
-          <span className="sr-only">(abre o aplicativo de mapas ou uma nova aba)</span>
-        </a>
+        <div className="space-y-2.5">
+          <a
+            href={directionsUrl(point.latitude, point.longitude)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-700 px-4 py-3 font-semibold text-white shadow-sm hover:bg-emerald-800"
+          >
+            <RouteIcon className="size-5" />
+            Como chegar
+            <span className="sr-only">(abre o aplicativo de mapas ou uma nova aba)</span>
+          </a>
 
-        <p className="text-sm text-slate-600">
-          As informações podem mudar. Se puder, confirme com o local antes de ir.
-          {state.status === 'success' && state.details.sourceType === 'OSM' && (
-            <>
-              {' '}
-              Dados do OpenStreetMap, um mapa feito de forma colaborativa
-              {state.details.editedByTeam ? ', revisados pela equipe E-Cicla.' : '.'}
-            </>
+          <Link
+            to={`/sugestoes/nova?ponto=${encodeURIComponent(point.id)}`}
+            className={`${SECONDARY_BUTTON} w-full`}
+          >
+            <EditIcon className="size-4" />
+            Sugerir correção
+          </Link>
+        </div>
+
+        <div className="space-y-1.5 text-sm text-slate-600">
+          {state.status === 'success' && state.details.verifiedAt && (
+            <p className="font-medium text-emerald-900">
+              Verificado pela equipe em {formatDate(state.details.verifiedAt)}.
+            </p>
           )}
-          {state.status === 'success' && state.details.sourceType === 'MANUAL' && (
-            <> Dados reunidos pela equipe E-Cicla a partir de fontes oficiais.</>
-          )}
-        </p>
+          <p>
+            As informações podem mudar. Se puder, confirme com o local antes de ir.
+            {state.status === 'success' && state.details.sourceType === 'OSM' && (
+              <>
+                {' '}
+                Dados do OpenStreetMap, um mapa feito de forma colaborativa
+                {state.details.editedByTeam ? ', revisados pela equipe E-Cicla.' : '.'}
+              </>
+            )}
+            {state.status === 'success' && state.details.sourceType === 'MANUAL' && (
+              <> Dados reunidos pela equipe E-Cicla a partir de fontes oficiais.</>
+            )}
+            {state.status === 'success' && state.details.sourceType === 'SUGGESTION' && (
+              <> Ponto sugerido pela comunidade e verificado pela equipe E-Cicla.</>
+            )}
+          </p>
+        </div>
       </div>
     </aside>
   )

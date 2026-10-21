@@ -11,6 +11,7 @@ export interface AuthState {
   login: (email: string, password: string) => Promise<void>
   register: (data: Registration) => Promise<void>
   logout: () => Promise<void>
+  updateName: (name: string) => Promise<void>
   deleteAccount: (password: string) => Promise<void>
 }
 

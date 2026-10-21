@@ -16,4 +16,5 @@ export const MATERIALS = Object.keys(MATERIAL_LABELS) as Material[]
 export const SOURCE_LABELS: Record<SourceType, string> = {
   OSM: 'OpenStreetMap',
   MANUAL: 'Equipe E-Cicla',
+  SUGGESTION: 'Sugestão da comunidade',
 }

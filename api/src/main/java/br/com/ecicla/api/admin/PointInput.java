@@ -28,7 +28,7 @@ public record PointInput(
     /**
      * @throws IllegalArgumentException with the reason, when the input is not acceptable
      */
-    PointInput validated() {
+    public PointInput validated() {
         if (latitude == null || longitude == null || latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
             throw new IllegalArgumentException("latitude and longitude are required and must be valid coordinates");
         }

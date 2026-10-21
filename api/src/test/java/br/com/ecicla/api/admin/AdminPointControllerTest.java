@@ -6,6 +6,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -88,7 +89,8 @@ class AdminPointControllerTest {
                 post("/api/admin/points").contentType(MediaType.APPLICATION_JSON).content(VALID_INPUT),
                 put("/api/admin/points/{id}", ID).contentType(MediaType.APPLICATION_JSON).content(VALID_INPUT),
                 put("/api/admin/points/{id}/status", ID).contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"status\": \"INACTIVE\"}"));
+                        .content("{\"status\": \"INACTIVE\"}"),
+                delete("/api/admin/points/{id}", ID));
     }
 
     @Test
@@ -211,6 +213,16 @@ class AdminPointControllerTest {
     }
 
     @Test
+    void deletesPointsPermanently() throws Exception {
+        when(repository.findById(ID)).thenReturn(Optional.of(OSM_POINT));
+
+        mvc.perform(delete("/api/admin/points/{id}", ID).header("Authorization", "Bearer token-admin"))
+                .andExpect(status().isNoContent());
+
+        verify(repository).deleteById(ID);
+    }
+
+    @Test
     void answersNotFoundForUnknownPoints() throws Exception {
         when(repository.findById(ID)).thenReturn(Optional.empty());
 
@@ -218,6 +230,8 @@ class AdminPointControllerTest {
                 .andExpect(status().isNotFound());
         mvc.perform(put("/api/admin/points/{id}", ID).header("Authorization", "Bearer token-admin")
                         .contentType(MediaType.APPLICATION_JSON).content(VALID_INPUT))
+                .andExpect(status().isNotFound());
+        mvc.perform(delete("/api/admin/points/{id}", ID).header("Authorization", "Bearer token-admin"))
                 .andExpect(status().isNotFound());
         mvc.perform(get("/api/admin/points/{id}", "nao-e-um-id").header("Authorization", "Bearer token-admin"))
                 .andExpect(status().isNotFound());

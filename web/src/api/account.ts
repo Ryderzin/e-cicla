@@ -43,6 +43,10 @@ export function fetchAccount(signal?: AbortSignal): Promise<Account> {
   return request<Account>('/api/me', { signal })
 }
 
+export function updateAccountName(name: string): Promise<Account> {
+  return request<Account>('/api/me', { method: 'PUT', body: { name } })
+}
+
 export function deleteAccount(password: string): Promise<void> {
   return request<void>('/api/me', { method: 'DELETE', body: { password } })
 }

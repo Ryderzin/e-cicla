@@ -111,6 +111,14 @@ public class AdminPointService {
                 status, Instant.now(), stored.adminEditedAt()))));
     }
 
+    /** Permanently removes a collection point from the database. */
+    public boolean delete(String id) {
+        return findPoint(id).map(stored -> {
+            repository.deleteById(stored.id());
+            return true;
+        }).orElse(false);
+    }
+
     private Optional<CollectionPoint> findPoint(String id) {
         return ObjectId.isValid(id) ? repository.findById(id) : Optional.empty();
     }

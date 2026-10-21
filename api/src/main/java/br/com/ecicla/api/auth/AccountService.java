@@ -79,6 +79,25 @@ public class AccountService {
         return new SessionResponse(sessions.create(user), AccountView.from(user));
     }
 
+    /** Updates the account holder's name. */
+    public AccountView updateName(Authenticated authenticated, String rawName) {
+        String name = trimmed(rawName);
+        if (name == null || name.length() < NAME_MIN || name.length() > NAME_MAX) {
+            throw badRequest("name must have between " + NAME_MIN + " and " + NAME_MAX + " characters");
+        }
+        User current = authenticated.user();
+        User updated = users.save(new User(
+                current.id(),
+                name,
+                current.email(),
+                current.passwordHash(),
+                current.role(),
+                current.privacyAcceptedAt(),
+                current.createdAt(),
+                Instant.now()));
+        return AccountView.from(updated);
+    }
+
     /** Deletes the account and signs it out everywhere, after confirming the password. */
     public void delete(Authenticated authenticated, String password) {
         User user = authenticated.user();

@@ -54,3 +54,7 @@ export function updatePoint(id: string, input: PointInput): Promise<AdminPoint> 
 export function changePointStatus(id: string, status: PointStatus): Promise<AdminPoint> {
   return request<AdminPoint>(`/api/admin/points/${encodeURIComponent(id)}/status`, { method: 'PUT', body: { status } })
 }
+
+export function deletePoint(id: string): Promise<void> {
+  return request<void>(`/api/admin/points/${encodeURIComponent(id)}`, { method: 'DELETE' })
+}

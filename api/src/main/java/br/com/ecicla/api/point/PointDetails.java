@@ -17,6 +17,7 @@ public record PointDetails(
         String notes,
         SourceType sourceType,
         boolean editedByTeam,
+        Instant verifiedAt,
         Instant updatedAt) {
 
     static PointDetails from(CollectionPoint point) {
@@ -33,6 +34,7 @@ public record PointDetails(
                 point.notes(),
                 point.source() == null ? null : point.source().type(),
                 point.adminEditedAt() != null,
+                point.adminEditedAt(),
                 point.updatedAt());
     }
 }

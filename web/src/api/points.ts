@@ -2,7 +2,7 @@ import { query, request } from './client.ts'
 
 export type Material = 'BATTERIES' | 'COMPUTERS' | 'MOBILE_PHONES' | 'ELECTRICAL_ITEMS' | 'SMALL_APPLIANCES'
 
-export type SourceType = 'OSM' | 'MANUAL'
+export type SourceType = 'OSM' | 'MANUAL' | 'SUGGESTION'
 
 export interface PointSummary {
   id: string
@@ -22,6 +22,7 @@ export interface PointDetails extends PointSummary {
   sourceType: SourceType | null
   /** True when the E-Cicla team reviewed or changed the point. */
   editedByTeam: boolean
+  verifiedAt: string | null
   updatedAt: string | null
 }
 

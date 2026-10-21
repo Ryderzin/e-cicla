@@ -244,7 +244,8 @@ class PointControllerTest {
 
         mvc.perform(get("/api/points/{id}", ID))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.editedByTeam").value(true));
+                .andExpect(jsonPath("$.editedByTeam").value(true))
+                .andExpect(jsonPath("$.verifiedAt").value("2026-10-07T12:00:00Z"));
     }
 
     @Test

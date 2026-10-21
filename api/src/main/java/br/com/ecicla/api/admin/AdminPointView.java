@@ -25,7 +25,7 @@ public record AdminPointView(
         Instant adminEditedAt,
         Instant updatedAt) {
 
-    static AdminPointView from(CollectionPoint point) {
+    public static AdminPointView from(CollectionPoint point) {
         return new AdminPointView(
                 point.id(),
                 point.name(),

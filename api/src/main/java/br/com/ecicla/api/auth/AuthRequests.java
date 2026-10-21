@@ -15,6 +15,9 @@ final class AuthRequests {
     record PasswordConfirmation(String password) {
     }
 
+    record UpdateProfile(String name) {
+    }
+
     record SessionResponse(String token, AccountView account) {
     }
 }

@@ -5,5 +5,7 @@ public enum SourceType {
     /** Imported from OpenStreetMap through the Overpass API. */
     OSM,
     /** Added by the team to the seed file, from public sources such as city hall websites. */
-    MANUAL
+    MANUAL,
+    /** Suggested by a user and approved by an administrator. */
+    SUGGESTION
 }

@@ -11,6 +11,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -198,6 +199,22 @@ class AccountEndpointsTest {
                 .andExpect(status().isNoContent());
         verify(sessions).revoke(new Authenticated(ana, "hash-da-ana"));
         verify(sessions, never()).revokeAll(anyString());
+    }
+
+    @Test
+    void updatesTheSignedInAccountName() throws Exception {
+        signedIn(user("senha-segura-123"));
+        when(users.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        mvc.perform(put("/api/me").header("Authorization", "Bearer token-da-ana")
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"name\": \"  Ana Paula  \"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("Ana Paula"))
+                .andExpect(jsonPath("$.email").value("ana@exemplo.com"));
+
+        mvc.perform(put("/api/me").header("Authorization", "Bearer token-da-ana")
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"name\": \"A\"}"))
+                .andExpect(status().isBadRequest());
     }
 
     @Test

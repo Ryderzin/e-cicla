@@ -104,6 +104,11 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
     clearSession()
   }, [clearSession])
 
+  const updateName = useCallback(async (name: string) => {
+    const updated = await api.updateAccountName(name)
+    setAccount(updated)
+  }, [])
+
   const deleteAccount = useCallback(
     async (password: string) => {
       await api.deleteAccount(password)
@@ -113,8 +118,8 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
   )
 
   const value = useMemo<AuthState>(
-    () => ({ status, account, sessionExpired, login, register, logout, deleteAccount }),
-    [status, account, sessionExpired, login, register, logout, deleteAccount],
+    () => ({ status, account, sessionExpired, login, register, logout, updateName, deleteAccount }),
+    [status, account, sessionExpired, login, register, logout, updateName, deleteAccount],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
