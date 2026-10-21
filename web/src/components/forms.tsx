@@ -1,5 +1,6 @@
-import { type ComponentProps, type ReactNode, useId } from 'react'
+import { type ComponentProps, type ReactNode, useId, useState } from 'react'
 
+import { EyeIcon, EyeOffIcon } from './icons.tsx'
 import { INPUT } from '../lib/ui.ts'
 
 interface FieldProps {
@@ -9,11 +10,24 @@ interface FieldProps {
 }
 
 /** Text field with its label, an optional hint and an error message linked for screen readers. */
-export function TextField({ label, hint, error, id, ...input }: FieldProps & ComponentProps<'input'>) {
+export function TextField({
+  label,
+  hint,
+  error,
+  id,
+  type,
+  className,
+  ...input
+}: FieldProps & ComponentProps<'input'>) {
   const generatedId = useId()
   const fieldId = id ?? generatedId
   const hintId = hint ? `${fieldId}-dica` : undefined
   const errorId = error ? `${fieldId}-erro` : undefined
+  const [showPassword, setShowPassword] = useState(false)
+
+  const isPassword = type === 'password'
+  const effectiveType = isPassword ? (showPassword ? 'text' : 'password') : type
+
   return (
     <div>
       <label htmlFor={fieldId} className="block font-semibold text-slate-900">
@@ -24,13 +38,37 @@ export function TextField({ label, hint, error, id, ...input }: FieldProps & Com
           {hint}
         </p>
       )}
-      <input
-        id={fieldId}
-        aria-invalid={error ? true : undefined}
-        aria-describedby={[hintId, errorId].filter(Boolean).join(' ') || undefined}
-        className={INPUT}
-        {...input}
-      />
+      {isPassword ? (
+        <div className="relative mt-1">
+          <input
+            id={fieldId}
+            type={effectiveType}
+            aria-invalid={error ? true : undefined}
+            aria-describedby={[hintId, errorId].filter(Boolean).join(' ') || undefined}
+            className={`${INPUT} mt-0 pr-11 ${className ?? ''}`}
+            {...input}
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword((prev) => !prev)}
+            aria-label={showPassword ? `Ocultar ${label.toLowerCase()}` : `Mostrar ${label.toLowerCase()}`}
+            aria-pressed={showPassword}
+            title={showPassword ? 'Ocultar senha' : 'Ver senha'}
+            className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-500 hover:text-slate-900 focus:outline-none focus-visible:text-emerald-800"
+          >
+            {showPassword ? <EyeOffIcon className="size-5" /> : <EyeIcon className="size-5" />}
+          </button>
+        </div>
+      ) : (
+        <input
+          id={fieldId}
+          type={type}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={[hintId, errorId].filter(Boolean).join(' ') || undefined}
+          className={`${INPUT} ${className ?? ''}`}
+          {...input}
+        />
+      )}
       {error && (
         <p id={errorId} className="mt-1 text-sm font-medium text-red-800">
           {error}

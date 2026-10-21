@@ -10,12 +10,12 @@ import {
   updatePoint,
 } from '../api/admin.ts'
 import { isApiError } from '../api/client.ts'
-import type { Material } from '../api/points.ts'
+import { type Material, searchPlace } from '../api/points.ts'
 import { Notice, TextAreaField, TextField } from '../components/forms.tsx'
-import { BackIcon } from '../components/icons.tsx'
+import { BackIcon, SearchIcon } from '../components/icons.tsx'
 import LocationPicker from '../components/LocationPicker.tsx'
 import { MATERIAL_LABELS, MATERIALS, SOURCE_LABELS, UNNAMED_POINT } from '../lib/materials.ts'
-import { FATEC_ZONA_LESTE, isInsideRegion } from '../lib/region.ts'
+import { FATEC_ZONA_LESTE, isInsideRegion, REGION_BOUNDS, roundCoordinate } from '../lib/region.ts'
 import { PAGE, PRIMARY_BUTTON, SECONDARY_BUTTON, TEXT_LINK } from '../lib/ui.ts'
 
 interface FormValues {
@@ -73,6 +73,13 @@ export default function AdminPointFormPage() {
   const [errors, setErrors] = useState<Errors>({})
   const [formError, setFormError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+
+  const [searchingAddress, setSearchingAddress] = useState(false)
+  const [addressNotice, setAddressNotice] = useState<{ kind: 'success' | 'error'; text: string } | null>(null)
+  const [recenterKey, setRecenterKey] = useState(0)
+  const lastSearchedAddress = useRef<string | null>(null)
+
+  const addressInputRef = useRef<HTMLInputElement>(null)
   const latitudeRef = useRef<HTMLInputElement>(null)
   const longitudeRef = useRef<HTMLInputElement>(null)
   const materialsRef = useRef<HTMLFieldSetElement>(null)
@@ -85,6 +92,7 @@ export default function AdminPointFormPage() {
     fetchAdminPoint(id, controller.signal)
       .then((point) => {
         setValues(toForm(point))
+        lastSearchedAddress.current = point.address ?? null
         setLoad({ status: 'ready', point })
       })
       .catch(() => {
@@ -99,10 +107,80 @@ export default function AdminPointFormPage() {
     setValues((current) => ({ ...current, [field]: value }))
 
   const placeOnMap = useCallback(
-    (latitude: number, longitude: number) =>
-      setValues((current) => ({ ...current, latitude: String(latitude), longitude: String(longitude) })),
+    (latitude: number, longitude: number) => {
+      setValues((current) => ({ ...current, latitude: String(latitude), longitude: String(longitude) }))
+      setErrors((errs) => {
+        if (!errs.latitude && !errs.longitude) return errs
+        const next = { ...errs }
+        delete next.latitude
+        delete next.longitude
+        return next
+      })
+    },
     [],
   )
+
+  const lookupAddress = useCallback(async (query: string) => {
+    const clean = query.trim()
+    if (clean.length < 3) {
+      setAddressNotice({
+        kind: 'error',
+        text: 'Informe um endereço mais completo (rua, número ou bairro) para localizar no mapa.',
+      })
+      return
+    }
+    setSearchingAddress(true)
+    setAddressNotice(null)
+    lastSearchedAddress.current = clean
+    try {
+      const place = await searchPlace(clean, REGION_BOUNDS)
+      if (!isInsideRegion(place.latitude, place.longitude)) {
+        setAddressNotice({
+          kind: 'error',
+          text: 'Esse endereço fica fora do estado de São Paulo, a área atendida pela plataforma.',
+        })
+        return
+      }
+      const lat = roundCoordinate(place.latitude)
+      const lng = roundCoordinate(place.longitude)
+      setValues((current) => ({
+        ...current,
+        latitude: String(lat),
+        longitude: String(lng),
+      }))
+      setRecenterKey((k) => k + 1)
+      setErrors((errs) => {
+        if (!errs.latitude && !errs.longitude) return errs
+        const next = { ...errs }
+        delete next.latitude
+        delete next.longitude
+        return next
+      })
+      setAddressNotice({
+        kind: 'success',
+        text: `Endereço localizado no mapa: ${place.label ?? clean}. As coordenadas foram atualizadas.`,
+      })
+    } catch (caught) {
+      if (isApiError(caught, 404)) {
+        setAddressNotice({
+          kind: 'error',
+          text: 'Endereço não encontrado no estado de SP. Tente incluir o número ou a cidade (ex.: “Av. Paulista, 1000, São Paulo”) ou marque direto no mapa.',
+        })
+      } else if (isApiError(caught, 503)) {
+        setAddressNotice({
+          kind: 'error',
+          text: 'Muitas consultas no momento. Aguarde alguns segundos e tente novamente.',
+        })
+      } else {
+        setAddressNotice({
+          kind: 'error',
+          text: 'Não foi possível buscar o endereço agora. Você pode marcar o ponto clicando no mapa.',
+        })
+      }
+    } finally {
+      setSearchingAddress(false)
+    }
+  }, [])
 
   function toggleMaterial(material: Material, checked: boolean) {
     set(
@@ -216,14 +294,59 @@ export default function AdminPointFormPage() {
               value={values.name}
               onChange={(event) => set('name', event.target.value)}
             />
-            <TextField
-              label="Endereço"
-              hint="Rua, número - Bairro, Cidade - UF"
-              autoComplete="off"
-              maxLength={POINT_LIMITS.address}
-              value={values.address}
-              onChange={(event) => set('address', event.target.value)}
-            />
+
+            <div>
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
+                <div className="flex-1">
+                  <TextField
+                    ref={addressInputRef}
+                    label="Endereço"
+                    hint="Rua, número - Bairro, Cidade - UF"
+                    autoComplete="off"
+                    maxLength={POINT_LIMITS.address}
+                    value={values.address}
+                    onChange={(event) => {
+                      set('address', event.target.value)
+                      setAddressNotice(null)
+                    }}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter') {
+                        event.preventDefault()
+                        void lookupAddress(values.address)
+                      }
+                    }}
+                    onBlur={() => {
+                      if (
+                        values.address.trim().length >= 5 &&
+                        values.address.trim() !== lastSearchedAddress.current
+                      ) {
+                        void lookupAddress(values.address)
+                      }
+                    }}
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => void lookupAddress(values.address)}
+                  disabled={searchingAddress || !values.address.trim()}
+                  className="inline-flex h-[42px] shrink-0 items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-slate-50 px-3.5 text-sm font-semibold text-slate-800 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+                  title="Localizar este endereço no mapa"
+                >
+                  <SearchIcon className="size-4 text-slate-600" />
+                  {searchingAddress ? 'Buscando…' : 'Localizar no mapa'}
+                </button>
+              </div>
+              {addressNotice && (
+                <p
+                  className={`mt-1.5 text-sm font-medium ${
+                    addressNotice.kind === 'error' ? 'text-red-800' : 'text-emerald-800'
+                  }`}
+                >
+                  {addressNotice.text}
+                </p>
+              )}
+            </div>
+
             {load.point?.addressApproximate && values.address === load.point.address && (
               <p className="-mt-3 text-sm text-slate-600">
                 Este endereço é aproximado, calculado pela localização. Ao corrigi-lo, ele passa a ser exibido como exato.
@@ -277,7 +400,7 @@ export default function AdminPointFormPage() {
             <fieldset>
               <legend className="font-semibold text-slate-900">Localização</legend>
               <p className="mt-0.5 text-sm text-slate-600">
-                Clique no mapa para marcar o local ou arraste o marcador. Também é possível digitar as coordenadas.
+                O mapa se posiciona pelo endereço ou clique no mapa para marcar o local. Também é possível ajustar as coordenadas.
               </p>
               <div className="mt-2">
                 <LocationPicker
@@ -285,6 +408,7 @@ export default function AdminPointFormPage() {
                   longitude={longitude}
                   onChange={placeOnMap}
                   fallback={FATEC_ZONA_LESTE}
+                  recenterKey={recenterKey}
                 />
               </div>
               <div className="mt-3 grid gap-3 sm:grid-cols-2">

@@ -3,7 +3,7 @@ import { Link, Navigate, useLocation, useNavigate, useParams, useSearchParams } 
 
 import { POINT_LIMITS, type PointInput } from '../api/admin.ts'
 import { isApiError } from '../api/client.ts'
-import { fetchPoint, type Material } from '../api/points.ts'
+import { fetchPoint, type Material, searchPlace } from '../api/points.ts'
 import {
   createSuggestion,
   fetchMySuggestion,
@@ -14,11 +14,11 @@ import {
 } from '../api/suggestions.ts'
 import { useAuth } from '../auth/useAuth.ts'
 import { Notice, TextAreaField, TextField } from '../components/forms.tsx'
-import { BackIcon } from '../components/icons.tsx'
+import { BackIcon, SearchIcon } from '../components/icons.tsx'
 import LocationPicker from '../components/LocationPicker.tsx'
 import { MATERIAL_LABELS, MATERIALS, UNNAMED_POINT } from '../lib/materials.ts'
 import { loginPath } from '../lib/navigation.ts'
-import { FATEC_ZONA_LESTE, isInsideRegion } from '../lib/region.ts'
+import { FATEC_ZONA_LESTE, isInsideRegion, REGION_BOUNDS, roundCoordinate } from '../lib/region.ts'
 import { PAGE, PRIMARY_BUTTON, SECONDARY_BUTTON, TEXT_LINK } from '../lib/ui.ts'
 
 interface FormValues {
@@ -91,7 +91,12 @@ export default function SuggestionFormPage() {
   const [formError, setFormError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
 
-  const latitudeRef = useRef<HTMLInputElement>(null)
+  const [searchingAddress, setSearchingAddress] = useState(false)
+  const [addressNotice, setAddressNotice] = useState<{ kind: 'success' | 'error'; text: string } | null>(null)
+  const [recenterKey, setRecenterKey] = useState(0)
+  const lastSearchedAddress = useRef<string | null>(null)
+
+  const addressInputRef = useRef<HTMLInputElement>(null)
   const materialsRef = useRef<HTMLFieldSetElement>(null)
 
   useEffect(() => {
@@ -113,6 +118,7 @@ export default function SuggestionFormPage() {
             return
           }
           setValues(fromProposed(suggestion.proposed, suggestion.comment))
+          lastSearchedAddress.current = suggestion.proposed.address ?? null
           setLoad({
             status: 'ready',
             type: suggestion.type,
@@ -139,6 +145,7 @@ export default function SuggestionFormPage() {
             notes: point.notes ?? '',
             comment: '',
           })
+          lastSearchedAddress.current = point.address ?? null
           setLoad({
             status: 'ready',
             type: 'POINT_UPDATE',
@@ -159,10 +166,78 @@ export default function SuggestionFormPage() {
     setValues((current) => ({ ...current, [field]: value }))
 
   const placeOnMap = useCallback(
-    (latitude: number, longitude: number) =>
-      setValues((current) => ({ ...current, latitude: String(latitude), longitude: String(longitude) })),
+    (latitude: number, longitude: number) => {
+      setValues((current) => ({ ...current, latitude: String(latitude), longitude: String(longitude) }))
+      setErrors((errs) => {
+        if (!errs.latitude) return errs
+        const next = { ...errs }
+        delete next.latitude
+        return next
+      })
+    },
     [],
   )
+
+  const lookupAddress = useCallback(async (query: string) => {
+    const clean = query.trim()
+    if (clean.length < 3) {
+      setAddressNotice({
+        kind: 'error',
+        text: 'Informe um endereço mais completo (rua, número ou bairro) para localizar no mapa.',
+      })
+      return
+    }
+    setSearchingAddress(true)
+    setAddressNotice(null)
+    lastSearchedAddress.current = clean
+    try {
+      const place = await searchPlace(clean, REGION_BOUNDS)
+      if (!isInsideRegion(place.latitude, place.longitude)) {
+        setAddressNotice({
+          kind: 'error',
+          text: 'Esse endereço fica fora do estado de São Paulo, a área atendida pela plataforma.',
+        })
+        return
+      }
+      const lat = roundCoordinate(place.latitude)
+      const lng = roundCoordinate(place.longitude)
+      setValues((current) => ({
+        ...current,
+        latitude: String(lat),
+        longitude: String(lng),
+      }))
+      setRecenterKey((k) => k + 1)
+      setErrors((errs) => {
+        if (!errs.latitude) return errs
+        const next = { ...errs }
+        delete next.latitude
+        return next
+      })
+      setAddressNotice({
+        kind: 'success',
+        text: `Endereço localizado no mapa: ${place.label ?? clean}. Arraste o marcador se quiser refinar a entrada exata.`,
+      })
+    } catch (caught) {
+      if (isApiError(caught, 404)) {
+        setAddressNotice({
+          kind: 'error',
+          text: 'Endereço não encontrado no estado de SP. Tente incluir o número ou a cidade (ex.: “Av. Paulista, 1000, São Paulo”) ou marque direto no mapa.',
+        })
+      } else if (isApiError(caught, 503)) {
+        setAddressNotice({
+          kind: 'error',
+          text: 'Muitas consultas no momento. Aguarde alguns segundos e tente novamente.',
+        })
+      } else {
+        setAddressNotice({
+          kind: 'error',
+          text: 'Não foi possível buscar o endereço agora. Você também pode marcar clicando no mapa.',
+        })
+      }
+    } finally {
+      setSearchingAddress(false)
+    }
+  }, [])
 
   if (authStatus === 'checking') {
     return (
@@ -192,7 +267,7 @@ export default function SuggestionFormPage() {
     const latitude = parseCoordinate(values.latitude)
     const longitude = parseCoordinate(values.longitude)
     if (latitude === null || longitude === null) {
-      found.latitude = 'Marque o local no mapa ou informe a latitude e a longitude.'
+      found.latitude = 'Informe o endereço e localize no mapa, ou clique no mapa para marcar o local do ponto.'
     } else if (!isInsideRegion(latitude, longitude)) {
       found.latitude = 'O local precisa ficar no estado de São Paulo, a área atendida pela plataforma.'
     }
@@ -229,7 +304,11 @@ export default function SuggestionFormPage() {
     setErrors(found)
     setFormError(null)
     if (!proposed) {
-      ;(found.latitude ? latitudeRef.current : materialsRef.current?.querySelector('input'))?.focus()
+      if (found.acceptedMaterials) {
+        materialsRef.current?.querySelector('input')?.focus()
+      } else if (found.latitude) {
+        addressInputRef.current?.focus()
+      }
       return
     }
     setSaving(true)
@@ -321,14 +400,57 @@ export default function SuggestionFormPage() {
               onChange={(event) => set('name', event.target.value)}
             />
 
-            <TextField
-              label="Endereço"
-              hint="Rua, número - Bairro, Cidade - SP"
-              autoComplete="off"
-              maxLength={POINT_LIMITS.address}
-              value={values.address}
-              onChange={(event) => set('address', event.target.value)}
-            />
+            <div>
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
+                <div className="flex-1">
+                  <TextField
+                    ref={addressInputRef}
+                    label="Endereço"
+                    hint="Rua, número - Bairro, Cidade - SP"
+                    autoComplete="off"
+                    maxLength={POINT_LIMITS.address}
+                    value={values.address}
+                    onChange={(event) => {
+                      set('address', event.target.value)
+                      setAddressNotice(null)
+                    }}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter') {
+                        event.preventDefault()
+                        void lookupAddress(values.address)
+                      }
+                    }}
+                    onBlur={() => {
+                      if (
+                        values.address.trim().length >= 5 &&
+                        values.address.trim() !== lastSearchedAddress.current
+                      ) {
+                        void lookupAddress(values.address)
+                      }
+                    }}
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => void lookupAddress(values.address)}
+                  disabled={searchingAddress || !values.address.trim()}
+                  className="inline-flex h-[42px] shrink-0 items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-slate-50 px-3.5 text-sm font-semibold text-slate-800 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+                  title="Localizar este endereço no mapa"
+                >
+                  <SearchIcon className="size-4 text-slate-600" />
+                  {searchingAddress ? 'Buscando…' : 'Localizar no mapa'}
+                </button>
+              </div>
+              {addressNotice && (
+                <p
+                  className={`mt-1.5 text-sm font-medium ${
+                    addressNotice.kind === 'error' ? 'text-red-800' : 'text-emerald-800'
+                  }`}
+                >
+                  {addressNotice.text}
+                </p>
+              )}
+            </div>
 
             <fieldset ref={materialsRef} aria-describedby={errors.acceptedMaterials ? 'materiais-erro' : undefined}>
               <legend className="font-semibold text-slate-900">Materiais aceitos (obrigatório)</legend>
@@ -387,38 +509,35 @@ export default function SuggestionFormPage() {
           </div>
 
           <div className="space-y-4">
-            <fieldset>
+            <fieldset aria-describedby={errors.latitude ? 'localizacao-erro' : undefined}>
               <legend className="font-semibold text-slate-900">Localização no mapa (obrigatório)</legend>
               <p className="mt-0.5 text-sm text-slate-600">
-                Clique no mapa para marcar onde fica o ponto de coleta ou arraste o marcador.
+                O mapa se posiciona automaticamente pelo endereço. Você também pode clicar no mapa ou arrastar o
+                marcador para ajustar a entrada ou coletor.
               </p>
-              <div className="mt-2">
+              <div className="mt-3">
                 <LocationPicker
                   latitude={latitude}
                   longitude={longitude}
                   onChange={placeOnMap}
                   fallback={FATEC_ZONA_LESTE}
+                  recenterKey={recenterKey}
                 />
               </div>
-              <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                <TextField
-                  ref={latitudeRef}
-                  label="Latitude"
-                  inputMode="decimal"
-                  placeholder="-23.52"
-                  value={values.latitude}
-                  onChange={(event) => set('latitude', event.target.value)}
-                  error={errors.latitude}
-                />
-                <TextField
-                  label="Longitude"
-                  inputMode="decimal"
-                  placeholder="-46.47"
-                  value={values.longitude}
-                  onChange={(event) => set('longitude', event.target.value)}
-                  aria-invalid={errors.latitude ? true : undefined}
-                />
-              </div>
+              {latitude !== null && longitude !== null ? (
+                <p className="mt-2 text-sm font-medium text-emerald-800">
+                  Local marcado no mapa. Arraste o marcador se quiser posicionar a entrada exata.
+                </p>
+              ) : (
+                <p className="mt-2 text-sm text-slate-600">
+                  Nenhum local marcado ainda. Digite o endereço e clique em “Localizar no mapa” ou clique diretamente no mapa.
+                </p>
+              )}
+              {errors.latitude && (
+                <p id="localizacao-erro" className="mt-1 text-sm font-medium text-red-800">
+                  {errors.latitude}
+                </p>
+              )}
             </fieldset>
 
             <div className="flex flex-wrap gap-3 pt-2">

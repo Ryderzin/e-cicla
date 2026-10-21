@@ -25,3 +25,8 @@ export function isInsideRegion(latitude: number, longitude: number): boolean {
     longitude <= REGION_BOUNDS.maxLng
   )
 }
+
+/** Rounds a coordinate to ~1 m of precision (6 decimal places). */
+export function roundCoordinate(value: number): number {
+  return Math.round(value * 1e6) / 1e6
+}
