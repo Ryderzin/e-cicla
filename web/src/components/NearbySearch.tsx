@@ -167,7 +167,7 @@ export default function NearbySearch({ results, onResults, selected, onSelect, i
           <button
             type="submit"
             disabled={working}
-            className="rounded-lg bg-emerald-700 p-2.5 text-white hover:bg-emerald-800 disabled:bg-slate-300 disabled:text-slate-600 dark:bg-emerald-600 dark:hover:bg-emerald-700 dark:disabled:bg-slate-800 dark:disabled:text-slate-600"
+            className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg bg-emerald-700 p-2.5 text-white hover:bg-emerald-800 disabled:bg-slate-300 disabled:text-slate-600 dark:bg-emerald-600 dark:hover:bg-emerald-700 dark:disabled:bg-slate-800 dark:disabled:text-slate-600"
           >
             <SearchIcon className="size-5" />
             <span className="sr-only">Buscar pontos perto deste endereço</span>
@@ -176,7 +176,7 @@ export default function NearbySearch({ results, onResults, selected, onSelect, i
             type="button"
             onClick={searchNearMe}
             disabled={working}
-            className="flex items-center gap-1.5 rounded-lg border border-emerald-700 px-2.5 py-2 font-semibold text-emerald-800 hover:bg-emerald-50 disabled:border-slate-300 disabled:text-slate-500 dark:border-emerald-500 dark:text-emerald-400 dark:hover:bg-emerald-950/40 dark:disabled:border-slate-700 dark:disabled:text-slate-600"
+            className="flex min-h-[44px] items-center gap-1.5 rounded-lg border border-emerald-700 px-3 py-2 font-semibold text-emerald-800 hover:bg-emerald-50 disabled:border-slate-300 disabled:text-slate-500 dark:border-emerald-500 dark:text-emerald-400 dark:hover:bg-emerald-950/40 dark:disabled:border-slate-700 dark:disabled:text-slate-600"
           >
             <LocateIcon className="size-5" />
             <span className="sr-only md:not-sr-only">Perto de mim</span>

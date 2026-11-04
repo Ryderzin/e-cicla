@@ -132,7 +132,7 @@ function LayoutContent() {
                 aria-pressed={isDark}
                 aria-label={themeLabel}
                 title={themeLabel}
-                className="rounded-md p-2 text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+                className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-md p-2 text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100"
               >
                 {isDark ? <SunIcon /> : <MoonIcon />}
               </button>
@@ -143,7 +143,7 @@ function LayoutContent() {
               aria-expanded={menuOpen}
               aria-controls={menuId}
               onClick={() => setMenuOpen(!menuOpen)}
-              className="rounded-md p-2 text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 md:hidden"
+              className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-md p-2 text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 md:hidden"
             >
               {menuOpen ? <CloseIcon /> : <MenuIcon />}
               <span className="sr-only">{menuOpen ? 'Fechar menu' : 'Abrir menu'}</span>

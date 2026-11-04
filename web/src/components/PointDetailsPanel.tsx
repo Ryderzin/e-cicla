@@ -94,7 +94,7 @@ export default function PointDetailsPanel({ point, onClose }: PointDetailsPanelP
               onClose()
             }}
             aria-label="Fechar detalhes"
-            className="shrink-0 rounded-md p-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+            className="flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-md p-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
           >
             <CloseIcon />
           </button>
