@@ -148,7 +148,7 @@ export default function NearbySearch({ results, onResults, selected, onSelect, i
 
   return (
     <div className="pointer-events-none absolute inset-x-3 top-3 z-[1050] md:right-auto md:w-[23rem]">
-      <div className="pointer-events-auto rounded-xl border border-transparent bg-white p-2 shadow-lg dark:border-slate-800 dark:bg-slate-900">
+      <div data-tour="perto-de-mim" className="pointer-events-auto rounded-xl border border-transparent bg-white p-2 shadow-lg dark:border-slate-800 dark:bg-slate-900">
         <form role="search" aria-label="Pontos perto de um local" onSubmit={submitAddress} className="flex items-center gap-1.5">
           <label htmlFor="busca-endereco" className="sr-only">
             Endereço, bairro ou cidade

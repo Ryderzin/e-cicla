@@ -77,6 +77,7 @@ export default function PointDetailsPanel({ point, onClose }: PointDetailsPanelP
 
   return (
     <aside
+      data-tour="detalhes"
       aria-labelledby="detalhes-titulo"
       className="absolute inset-x-0 bottom-0 z-[1100] max-h-[65%] overflow-y-auto rounded-t-2xl bg-white shadow-[0_-8px_24px_rgba(15,23,42,0.18)] md:inset-y-0 md:right-0 md:left-auto md:max-h-none md:w-96 md:rounded-none md:border-l md:border-slate-200 md:shadow-xl dark:border-slate-800 dark:bg-slate-900"
     >

@@ -58,7 +58,7 @@ export default function MapPage() {
   }, [])
 
   return (
-    <div className="relative min-h-[28rem] flex-1">
+    <div data-tour="mapa" className="relative min-h-[28rem] flex-1">
       <title>Mapa de pontos de coleta | E-Cicla</title>
       <h1 className="sr-only">Mapa de pontos de coleta</h1>
 

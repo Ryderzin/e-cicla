@@ -212,7 +212,9 @@ export default function HomePage() {
               O E-Cicla mostra no mapa onde entregar celulares, pilhas, carregadores e outros aparelhos que você não usa
               mais. Para consultar os pontos de coleta, não é preciso criar conta.
             </p>
-            <HeroSearch />
+            <div data-tour="busca-inicio">
+              <HeroSearch />
+            </div>
             <p className="mt-4 text-slate-700 dark:text-slate-300">
               Prefere explorar?{' '}
               <Link to="/mapa" className={TEXT_LINK}>
@@ -247,7 +249,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section aria-labelledby="o-que-e-titulo">
+      <section data-tour="o-que-e" aria-labelledby="o-que-e-titulo">
         <Reveal className="mx-auto grid max-w-6xl items-center gap-10 px-4 py-14 md:grid-cols-2">
           <div>
             <div className="flex flex-wrap items-center justify-between gap-3">
@@ -326,7 +328,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section aria-labelledby="o-que-levar-titulo" className="bg-emerald-50 dark:bg-slate-900/60">
+      <section data-tour="o-que-levar" aria-labelledby="o-que-levar-titulo" className="bg-emerald-50 dark:bg-slate-900/60">
         <div className="mx-auto max-w-6xl px-4 py-14">
           <Reveal>
             <div className="flex flex-wrap items-center justify-between gap-3">
@@ -360,7 +362,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section aria-labelledby="antes-titulo">
+      <section data-tour="antes-de-levar" aria-labelledby="antes-titulo">
         <div className="mx-auto grid max-w-6xl gap-10 px-4 py-14 md:grid-cols-[1fr_1.4fr]">
           <Reveal className="md:sticky md:top-8 md:self-start">
             <div className="flex flex-wrap items-center justify-between gap-3">
