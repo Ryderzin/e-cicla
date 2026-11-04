@@ -7,6 +7,7 @@ import PointDetailsPanel from '../components/PointDetailsPanel.tsx'
 import PointMap, { type MapFocus } from '../components/PointMap.tsx'
 import type { NearbyRequest } from '../lib/geolocation.ts'
 import { REGION_BOUNDS } from '../lib/region.ts'
+import { useTour } from '../tour/useTour.ts'
 
 type PointsState = { status: 'loading' } | { status: 'error' } | { status: 'success'; points: PointSummary[] }
 
@@ -17,6 +18,8 @@ export default function MapPage() {
   const [attempt, setAttempt] = useState(0)
   const [selected, setSelected] = useState<PointSummary | null>(null)
   const [nearby, setNearby] = useState<NearbyResults | null>(null)
+  const { isOpen: isTourOpen, currentStep, skipStep } = useTour()
+
   // A search started on the home page travels in the navigation state, never in the address bar:
   // it may be the user's own address or location.
   const location = useLocation()
@@ -56,6 +59,33 @@ export default function MapPage() {
     setNearby(results)
     setSelected(null)
   }, [])
+
+  // In the tour step for point details, open a point automatically or skip if points are still loading
+  useEffect(() => {
+    if (!isTourOpen || currentStep.selector !== 'detalhes') {
+      return
+    }
+
+    if (state.status === 'success' && points.length > 0) {
+      if (!selected) {
+        const timer = setTimeout(() => setSelected(points[0]), 0)
+        return () => clearTimeout(timer)
+      }
+      return
+    }
+
+    if (state.status === 'error' || (state.status === 'success' && points.length === 0)) {
+      skipStep()
+      return
+    }
+
+    if (state.status === 'loading') {
+      const timer = setTimeout(() => {
+        skipStep()
+      }, 800)
+      return () => clearTimeout(timer)
+    }
+  }, [isTourOpen, currentStep, state.status, points, selected, skipStep])
 
   return (
     <div data-tour="mapa" className="relative min-h-[28rem] flex-1">

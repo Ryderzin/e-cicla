@@ -31,6 +31,8 @@ function markTutorialSeen(): void {
 export function TourProvider({ children }: { children: ReactNode }) {
   const [isOpen, setIsOpen] = useState(false)
   const [currentStepIndex, setCurrentStepIndex] = useState(0)
+  const [direction, setDirection] = useState<'forward' | 'backward'>('forward')
+  const directionRef = useRef<'forward' | 'backward'>('forward')
   const [showInvite, setShowInvite] = useState(() => !hasSeenTutorial())
   const triggerRef = useRef<HTMLElement | null>(null)
 
@@ -43,6 +45,8 @@ export function TourProvider({ children }: { children: ReactNode }) {
     stopSpeech()
     markTutorialSeen()
     setShowInvite(false)
+    directionRef.current = 'forward'
+    setDirection('forward')
     setCurrentStepIndex(0)
     setIsOpen(true)
   }, [])
@@ -57,6 +61,8 @@ export function TourProvider({ children }: { children: ReactNode }) {
 
   const nextStep = useCallback(() => {
     stopSpeech()
+    directionRef.current = 'forward'
+    setDirection('forward')
     setCurrentStepIndex((current) => {
       if (current < TOUR_STEPS.length - 1) {
         return current + 1
@@ -68,15 +74,34 @@ export function TourProvider({ children }: { children: ReactNode }) {
 
   const prevStep = useCallback(() => {
     stopSpeech()
+    directionRef.current = 'backward'
+    setDirection('backward')
     setCurrentStepIndex((current) => Math.max(0, current - 1))
   }, [])
 
   const goToStep = useCallback((index: number) => {
     if (index >= 0 && index < TOUR_STEPS.length) {
       stopSpeech()
+      directionRef.current = index >= currentStepIndex ? 'forward' : 'backward'
+      setDirection(directionRef.current)
       setCurrentStepIndex(index)
     }
-  }, [])
+  }, [currentStepIndex])
+
+  const skipStep = useCallback(() => {
+    stopSpeech()
+    if (directionRef.current === 'backward') {
+      setCurrentStepIndex((current) => Math.max(0, current - 1))
+    } else {
+      setCurrentStepIndex((current) => {
+        if (current < TOUR_STEPS.length - 1) {
+          return current + 1
+        }
+        closeTour()
+        return current
+      })
+    }
+  }, [closeTour])
 
   const acceptInvite = useCallback(() => {
     startTour()
@@ -94,11 +119,13 @@ export function TourProvider({ children }: { children: ReactNode }) {
     currentStepIndex,
     currentStep,
     totalSteps: TOUR_STEPS.length,
+    direction,
     startTour,
     closeTour,
     nextStep,
     prevStep,
     goToStep,
+    skipStep,
     showInvite,
     acceptInvite,
     dismissInvite,

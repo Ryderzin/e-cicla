@@ -6,11 +6,13 @@ export interface TourContextValue {
   currentStepIndex: number
   currentStep: TourStep
   totalSteps: number
+  direction: 'forward' | 'backward'
   startTour: (triggerElement?: HTMLElement | null) => void
   closeTour: () => void
   nextStep: () => void
   prevStep: () => void
   goToStep: (index: number) => void
+  skipStep: () => void
   showInvite: boolean
   acceptInvite: () => void
   dismissInvite: () => void

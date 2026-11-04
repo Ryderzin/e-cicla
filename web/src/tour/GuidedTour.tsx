@@ -20,6 +20,7 @@ export default function GuidedTour() {
   const navigate = useNavigate()
 
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null)
+  const [targetReady, setTargetReady] = useState(false)
   const [isDesktop, setIsDesktop] = useState(
     () => typeof window !== 'undefined' && window.innerWidth >= 640,
   )
@@ -59,6 +60,12 @@ export default function GuidedTour() {
       navigate(currentStep.path)
     }
 
+    const resetTimer = setTimeout(() => {
+      setTargetReady(false)
+      setTargetRect(null)
+      targetElementRef.current = null
+    }, 0)
+
     let canceled = false
     const startTime = Date.now()
     const maxWaitMs = 3000
@@ -79,6 +86,7 @@ export default function GuidedTour() {
         targetElementRef.current = el
         const rect = el.getBoundingClientRect()
         setTargetRect(rect)
+        setTargetReady(true)
 
         const prefersReducedMotion = window.matchMedia(
           '(prefers-reduced-motion: reduce)',
@@ -95,6 +103,7 @@ export default function GuidedTour() {
         // Target not found within timeout; display centered dialog without spotlight
         setTargetRect(null)
         targetElementRef.current = null
+        setTargetReady(true)
       }
     }
 
@@ -102,12 +111,13 @@ export default function GuidedTour() {
     return () => {
       canceled = true
       clearTimeout(timer)
+      clearTimeout(resetTimer)
     }
   }, [isOpen, currentStep, location.pathname, navigate])
 
   // Focus management and keyboard navigation
   useEffect(() => {
-    if (!isOpen) return
+    if (!isOpen || !targetReady) return
 
     // Move focus inside dialog
     const focusTimer = setTimeout(() => {
@@ -174,7 +184,7 @@ export default function GuidedTour() {
       clearTimeout(focusTimer)
       window.removeEventListener('keydown', handleKeyDown)
     }
-  }, [isOpen, currentStepIndex, closeTour, nextStep, prevStep])
+  }, [isOpen, targetReady, currentStepIndex, closeTour, nextStep, prevStep])
 
   const speechText = `${currentStep.title}. ${currentStep.text}`
 
@@ -217,7 +227,7 @@ export default function GuidedTour() {
     }
   }, [isDesktop, targetRect])
 
-  if (!isOpen) return null
+  if (!isOpen || !targetReady) return null
 
   const isLastStep = currentStepIndex === totalSteps - 1
 
