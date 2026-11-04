@@ -219,3 +219,38 @@ export function MoonIcon(props: IconProps) {
     </Icon>
   )
 }
+
+export function SpeakerIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+      <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+      <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+    </Icon>
+  )
+}
+
+export function PauseIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <rect x="6" y="4" width="4" height="16" rx="1" />
+      <rect x="14" y="4" width="4" height="16" rx="1" />
+    </Icon>
+  )
+}
+
+export function PlayIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <polygon points="5 3 19 12 5 21 5 3" />
+    </Icon>
+  )
+}
+
+export function StopIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <rect x="5" y="5" width="14" height="14" rx="2" />
+    </Icon>
+  )
+}

@@ -7,6 +7,8 @@ import { MATERIAL_LABELS, UNNAMED_POINT } from '../lib/materials.ts'
 import { parseOpeningHours } from '../lib/openingHours.ts'
 import { SECONDARY_BUTTON, TEXT_LINK } from '../lib/ui.ts'
 import { CloseIcon, EditIcon, RouteIcon } from './icons.tsx'
+import ReadAloudButton from './ReadAloudButton.tsx'
+import { stop } from '../lib/speech.ts'
 
 type DetailsState = { status: 'loading' } | { status: 'error' } | { status: 'success'; details: PointDetails }
 
@@ -28,6 +30,11 @@ function formatDate(iso: string): string {
  * Render it with key={point.id} so each point starts with fresh state.
  */
 export default function PointDetailsPanel({ point, onClose }: PointDetailsPanelProps) {
+  useEffect(() => {
+    return () => {
+      stop()
+    }
+  }, [])
   const [state, setState] = useState<DetailsState>({ status: 'loading' })
   const [attempt, setAttempt] = useState(0)
   const headingRef = useRef<HTMLHeadingElement>(null)
@@ -81,12 +88,22 @@ export default function PointDetailsPanel({ point, onClose }: PointDetailsPanelP
           </h2>
           <button
             type="button"
-            onClick={onClose}
+            onClick={() => {
+              stop()
+              onClose()
+            }}
             aria-label="Fechar detalhes"
             className="shrink-0 rounded-md p-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
           >
             <CloseIcon />
           </button>
+        </div>
+        <div className="mt-2">
+          <ReadAloudButton
+            size="sm"
+            label="Ouvir detalhes"
+            getText={() => buildPointSpeechText(point, state.status === 'success' ? state.details : null)}
+          />
         </div>
       </div>
 
@@ -249,4 +266,37 @@ function OpeningHours({ value, pointId }: { value: string | null; pointId: strin
       ))}
     </ul>
   )
+}
+
+
+function buildPointSpeechText(point: PointSummary, details?: PointDetails | null): string {
+  const parts: string[] = []
+  parts.push(point.name ?? 'Ponto de coleta.')
+  if (details?.address) {
+    if (details.addressApproximate) {
+      parts.push(`Endereço aproximado: ${details.address}.`)
+    } else {
+      parts.push(`Endereço: ${details.address}.`)
+    }
+  }
+  const materials = point.acceptedMaterials.map((m) => MATERIAL_LABELS[m]).join(', ')
+  parts.push(`Materiais aceitos: ${materials}.`)
+  if (details?.openingHours) {
+    const rows = parseOpeningHours(details.openingHours)
+    if (rows) {
+      const schedule = rows.map((r) => `${r.days}: ${r.hours}`).join('. ')
+      parts.push(`Horário de funcionamento: ${schedule}.`)
+    } else {
+      parts.push(`Horário de funcionamento: ${details.openingHours}.`)
+    }
+  } else {
+    parts.push('Horário de funcionamento não informado.')
+  }
+  if (details?.operator) {
+    parts.push(`Responsável: ${details.operator}.`)
+  }
+  if (details?.notes) {
+    parts.push(`Observações: ${details.notes}.`)
+  }
+  return parts.join(' ')
 }

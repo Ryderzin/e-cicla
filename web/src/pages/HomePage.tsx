@@ -5,6 +5,7 @@ import type { Material } from '../api/points.ts'
 import { fetchPoints } from '../api/points.ts'
 import eWastePhoto from '../assets/lixo-eletronico.jpg'
 import { Notice } from '../components/forms.tsx'
+import ReadAloudButton from '../components/ReadAloudButton.tsx'
 import HeroIllustration from '../components/home/HeroIllustration.tsx'
 import HeroSearch from '../components/home/HeroSearch.tsx'
 import {
@@ -249,7 +250,12 @@ export default function HomePage() {
       <section aria-labelledby="o-que-e-titulo">
         <Reveal className="mx-auto grid max-w-6xl items-center gap-10 px-4 py-14 md:grid-cols-2">
           <div>
-            <SectionTitle id="o-que-e-titulo">O que é lixo eletrônico?</SectionTitle>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <SectionTitle id="o-que-e-titulo">O que é lixo eletrônico?</SectionTitle>
+              <ReadAloudButton
+                text="O que é lixo eletrônico? É todo aparelho elétrico ou eletrônico que quebrou, ficou velho ou que você não usa mais, e também as peças e os acessórios dele. Alguns exemplos do dia a dia: Celulares e smartphones. Carregadores e cabos. Pilhas e baterias. Computadores e notebooks. Fones de ouvido e caixas de som. Eletrodomésticos pequenos como secador, ferro e liquidificador."
+              />
+            </div>
             <p className="mt-3 text-lg text-slate-700 dark:text-slate-300">
               É todo aparelho elétrico ou eletrônico que quebrou, ficou velho ou que você não usa mais, e também as peças
               e os acessórios dele. Alguns exemplos do dia a dia:
@@ -323,7 +329,12 @@ export default function HomePage() {
       <section aria-labelledby="o-que-levar-titulo" className="bg-emerald-50 dark:bg-slate-900/60">
         <div className="mx-auto max-w-6xl px-4 py-14">
           <Reveal>
-            <SectionTitle id="o-que-levar-titulo">O que você pode levar</SectionTitle>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <SectionTitle id="o-que-levar-titulo">O que você pode levar</SectionTitle>
+              <ReadAloudButton
+                text="O que você pode levar. Cada ponto de coleta aceita alguns destes tipos de material. No mapa, os detalhes do ponto mostram quais. Celulares e smartphones. Pilhas e baterias. Computadores e notebooks. Eletrodomésticos pequenos. Outros aparelhos e cabos elétricos."
+              />
+            </div>
             <p className="mt-3 max-w-3xl text-lg text-slate-700 dark:text-slate-300">
               Cada ponto de coleta aceita alguns destes tipos de material. No mapa, os detalhes do ponto mostram quais.
             </p>
@@ -352,7 +363,12 @@ export default function HomePage() {
       <section aria-labelledby="antes-titulo">
         <div className="mx-auto grid max-w-6xl gap-10 px-4 py-14 md:grid-cols-[1fr_1.4fr]">
           <Reveal className="md:sticky md:top-8 md:self-start">
-            <SectionTitle id="antes-titulo">Antes de levar seu aparelho</SectionTitle>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <SectionTitle id="antes-titulo">Antes de levar seu aparelho</SectionTitle>
+              <ReadAloudButton
+                text="Antes de levar seu aparelho. Alguns cuidados rápidos protegem seus dados e evitam uma viagem perdida. Guarde o que é importante. Apague seus dados pessoais. Tire o chip e o cartão de memória. Separe as pilhas e baterias. Limpe o aparelho por fora. Confira se o local aceita o tipo de aparelho."
+              />
+            </div>
             <p className="mt-3 text-lg text-slate-700 dark:text-slate-300">
               Alguns cuidados rápidos protegem seus dados e evitam uma viagem perdida.
             </p>
@@ -384,10 +400,15 @@ export default function HomePage() {
             {QUESTIONS.map(({ question, answer }) => (
               <details key={question} className="group rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
                 <summary className="flex cursor-pointer list-none items-center justify-between gap-4 rounded-xl p-4 font-semibold text-slate-900 hover:bg-slate-50 dark:text-slate-100 dark:hover:bg-slate-800/60 [&::-webkit-details-marker]:hidden">
-                  {question}
+                  <span>{question}</span>
                   <ChevronDownIcon className="size-5 shrink-0 text-slate-600 motion-safe:transition-transform group-open:rotate-180 dark:text-slate-400" />
                 </summary>
-                <p className="px-4 pb-4 text-slate-700 dark:text-slate-300">{answer}</p>
+                <div className="px-4 pb-4 space-y-2">
+                  <div>
+                    <ReadAloudButton size="sm" text={`${question} ${answer}`} />
+                  </div>
+                  <p className="text-slate-700 dark:text-slate-300">{answer}</p>
+                </div>
               </details>
             ))}
           </div>
