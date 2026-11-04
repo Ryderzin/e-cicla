@@ -148,7 +148,7 @@ export default function NearbySearch({ results, onResults, selected, onSelect, i
 
   return (
     <div className="pointer-events-none absolute inset-x-3 top-3 z-[1050] md:right-auto md:w-[23rem]">
-      <div className="pointer-events-auto rounded-xl bg-white p-2 shadow-lg">
+      <div className="pointer-events-auto rounded-xl border border-transparent bg-white p-2 shadow-lg dark:border-slate-800 dark:bg-slate-900">
         <form role="search" aria-label="Pontos perto de um local" onSubmit={submitAddress} className="flex items-center gap-1.5">
           <label htmlFor="busca-endereco" className="sr-only">
             Endereço, bairro ou cidade
@@ -162,12 +162,12 @@ export default function NearbySearch({ results, onResults, selected, onSelect, i
             placeholder="Endereço, bairro ou cidade"
             value={text}
             onChange={(event) => setText(event.target.value)}
-            className="min-w-0 flex-1 rounded-lg border border-slate-500 px-3 py-2 text-slate-900 placeholder:text-slate-500"
+            className="min-w-0 flex-1 rounded-lg border border-slate-500 px-3 py-2 text-slate-900 placeholder:text-slate-500 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-400"
           />
           <button
             type="submit"
             disabled={working}
-            className="rounded-lg bg-emerald-700 p-2.5 text-white hover:bg-emerald-800 disabled:bg-slate-300 disabled:text-slate-600"
+            className="rounded-lg bg-emerald-700 p-2.5 text-white hover:bg-emerald-800 disabled:bg-slate-300 disabled:text-slate-600 dark:bg-emerald-600 dark:hover:bg-emerald-700 dark:disabled:bg-slate-800 dark:disabled:text-slate-600"
           >
             <SearchIcon className="size-5" />
             <span className="sr-only">Buscar pontos perto deste endereço</span>
@@ -176,7 +176,7 @@ export default function NearbySearch({ results, onResults, selected, onSelect, i
             type="button"
             onClick={searchNearMe}
             disabled={working}
-            className="flex items-center gap-1.5 rounded-lg border border-emerald-700 px-2.5 py-2 font-semibold text-emerald-800 hover:bg-emerald-50 disabled:border-slate-300 disabled:text-slate-500"
+            className="flex items-center gap-1.5 rounded-lg border border-emerald-700 px-2.5 py-2 font-semibold text-emerald-800 hover:bg-emerald-50 disabled:border-slate-300 disabled:text-slate-500 dark:border-emerald-500 dark:text-emerald-400 dark:hover:bg-emerald-950/40 dark:disabled:border-slate-700 dark:disabled:text-slate-600"
           >
             <LocateIcon className="size-5" />
             <span className="sr-only md:not-sr-only">Perto de mim</span>
@@ -184,8 +184,8 @@ export default function NearbySearch({ results, onResults, selected, onSelect, i
         </form>
 
         <div role="status" className={state.status === 'idle' ? 'sr-only' : 'px-1 pt-2 text-sm'}>
-          {state.status === 'working' && <p className="text-slate-700">{state.message}</p>}
-          {state.status === 'error' && <p className="font-medium text-red-800">{state.message}</p>}
+          {state.status === 'working' && <p className="text-slate-700 dark:text-slate-300">{state.message}</p>}
+          {state.status === 'error' && <p className="font-medium text-red-800 dark:text-red-400">{state.message}</p>}
           {state.status === 'idle' && results && (
             <>
               {results.points.length === 1 ? '1 ponto encontrado' : `${results.points.length} pontos encontrados`} perto
@@ -196,22 +196,22 @@ export default function NearbySearch({ results, onResults, selected, onSelect, i
 
         {results && state.status !== 'working' && (
           // On phones the list gives way to the details panel while a point is open.
-          <section aria-labelledby="perto-titulo" className={`${selected ? 'hidden md:block' : ''} mt-2 border-t border-slate-200 pt-2`}>
+          <section aria-labelledby="perto-titulo" className={`${selected ? 'hidden md:block' : ''} mt-2 border-t border-slate-200 pt-2 dark:border-slate-800`}>
             <div className="flex items-start justify-between gap-2 px-1">
-              <h2 id="perto-titulo" className="text-sm font-semibold text-slate-800">
+              <h2 id="perto-titulo" className="text-sm font-semibold text-slate-800 dark:text-slate-200">
                 {results.fromDevice ? 'Mais perto de você' : `Mais perto de ${results.originLabel}`}
               </h2>
               <button
                 type="button"
                 onClick={clear}
-                className="-mt-1 shrink-0 rounded-md p-1 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                className="-mt-1 shrink-0 rounded-md p-1 text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
               >
                 <CloseIcon className="size-5" />
                 <span className="sr-only">Limpar a busca</span>
               </button>
             </div>
             {results.points.length === 0 ? (
-              <p className="px-1 py-2 text-slate-700">Não encontramos pontos de coleta perto deste local.</p>
+              <p className="px-1 py-2 text-slate-700 dark:text-slate-300">Não encontramos pontos de coleta perto deste local.</p>
             ) : (
               <ol className="mt-1 max-h-[32vh] space-y-1 overflow-y-auto md:max-h-[50vh]">
                 {results.points.map((point) => (
@@ -220,15 +220,15 @@ export default function NearbySearch({ results, onResults, selected, onSelect, i
                       type="button"
                       onClick={() => onSelect(point)}
                       aria-current={selected?.id === point.id ? 'true' : undefined}
-                      className="w-full rounded-lg px-2 py-2 text-left hover:bg-slate-100 aria-[current=true]:bg-amber-50 aria-[current=true]:ring-1 aria-[current=true]:ring-amber-700"
+                      className="w-full rounded-lg px-2 py-2 text-left hover:bg-slate-100 aria-[current=true]:bg-amber-50 aria-[current=true]:ring-1 aria-[current=true]:ring-amber-700 dark:hover:bg-slate-800 dark:aria-[current=true]:bg-amber-950/40 dark:aria-[current=true]:ring-amber-500"
                     >
                       <span className="flex items-baseline justify-between gap-2">
-                        <span className="font-semibold text-slate-900">{point.name ?? UNNAMED_POINT}</span>
-                        <span className="shrink-0 text-sm font-medium text-slate-700">
+                        <span className="font-semibold text-slate-900 dark:text-slate-100">{point.name ?? UNNAMED_POINT}</span>
+                        <span className="shrink-0 text-sm font-medium text-slate-700 dark:text-slate-300">
                           {formatDistance(point.distanceMeters)}
                         </span>
                       </span>
-                      <span className="mt-0.5 block text-sm text-slate-600">
+                      <span className="mt-0.5 block text-sm text-slate-600 dark:text-slate-400">
                         {point.acceptedMaterials.map((material) => MATERIAL_LABELS[material]).join(', ')}
                       </span>
                     </button>
@@ -236,7 +236,7 @@ export default function NearbySearch({ results, onResults, selected, onSelect, i
                 ))}
               </ol>
             )}
-            <p className="px-1 pt-1 text-xs text-slate-600">Distância em linha reta.</p>
+            <p className="px-1 pt-1 text-xs text-slate-600 dark:text-slate-400">Distância em linha reta.</p>
           </section>
         )}
       </div>

@@ -31,9 +31,9 @@ function matches(point: AdminPoint, terms: string): boolean {
 
 function StatusBadge({ status }: { status: PointStatus }) {
   return status === 'ACTIVE' ? (
-    <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-sm font-medium text-emerald-900">Ativo</span>
+    <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-sm font-medium text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200">Ativo</span>
   ) : (
-    <span className="rounded-full bg-slate-200 px-2.5 py-0.5 text-sm font-medium text-slate-800">Desativado</span>
+    <span className="rounded-full bg-slate-200 px-2.5 py-0.5 text-sm font-medium text-slate-800 dark:bg-slate-800 dark:text-slate-200">Desativado</span>
   )
 }
 
@@ -162,8 +162,8 @@ export default function AdminPointsPage() {
 
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">Pontos de coleta</h1>
-          <p className="mt-1 text-lg text-slate-700">Cadastre, corrija, desative ou exclua os pontos que aparecem no mapa.</p>
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">Pontos de coleta</h1>
+          <p className="mt-1 text-lg text-slate-700 dark:text-slate-300">Cadastre, corrija, desative ou exclua os pontos que aparecem no mapa.</p>
         </div>
         <Link to="/admin/pontos/novo" className={PRIMARY_BUTTON}>
           <PlusIcon className="size-5" />
@@ -217,7 +217,7 @@ export default function AdminPointsPage() {
 
       <div className="mt-6 flex flex-col gap-3 md:flex-row md:items-end">
         <div className="flex-1">
-          <label htmlFor="filtro-texto" className="block font-semibold text-slate-900">
+          <label htmlFor="filtro-texto" className="block font-semibold text-slate-900 dark:text-slate-100">
             Buscar por nome, endereço ou responsável
           </label>
           <input
@@ -229,12 +229,12 @@ export default function AdminPointsPage() {
           />
         </div>
         <fieldset>
-          <legend className="font-semibold text-slate-900">Situação</legend>
-          <div className="mt-1 flex rounded-lg bg-slate-100 p-1">
+          <legend className="font-semibold text-slate-900 dark:text-slate-100">Situação</legend>
+          <div className="mt-1 flex rounded-lg bg-slate-100 p-1 dark:bg-slate-800/80">
             {FILTERS.map(({ value, label }) => (
               <label
                 key={value}
-                className="cursor-pointer rounded-md px-3 py-1.5 font-medium text-slate-700 has-[:checked]:bg-white has-[:checked]:text-slate-950 has-[:checked]:shadow-sm has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-blue-700"
+                className="cursor-pointer rounded-md px-3 py-1.5 font-medium text-slate-700 has-[:checked]:bg-white has-[:checked]:text-slate-950 has-[:checked]:shadow-sm has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-blue-700 dark:text-slate-300 dark:has-[:checked]:bg-slate-900 dark:has-[:checked]:text-slate-100"
               >
                 <input
                   type="radio"
@@ -276,7 +276,7 @@ export default function AdminPointsPage() {
 
       {state.status === 'success' && (
         <>
-          <p role="status" className="mt-6 text-slate-700">
+          <p role="status" className="mt-6 text-slate-700 dark:text-slate-300">
             {visible.length === 1 ? '1 ponto' : `${visible.length} pontos`}
             {visible.length !== state.points.length && ` de ${state.points.length}`}
           </p>
@@ -285,7 +285,7 @@ export default function AdminPointsPage() {
           <table className="mt-3 hidden w-full text-left md:table">
             <caption className="sr-only">Pontos de coleta</caption>
             <thead>
-              <tr className="border-b border-slate-300 text-sm text-slate-700">
+              <tr className="border-b border-slate-300 text-sm text-slate-700 dark:border-slate-700 dark:text-slate-300">
                 <th scope="col" className="py-2 pr-3 font-semibold">Nome</th>
                 <th scope="col" className="py-2 pr-3 font-semibold">Endereço</th>
                 <th scope="col" className="py-2 pr-3 font-semibold">Materiais aceitos</th>
@@ -296,16 +296,16 @@ export default function AdminPointsPage() {
             </thead>
             <tbody>
               {visible.map((point) => (
-                <tr key={point.id} className="border-b border-slate-200 align-top">
-                  <td className="py-3 pr-3 font-medium text-slate-900">{point.name ?? UNNAMED_POINT}</td>
-                  <td className="py-3 pr-3 text-slate-700">{point.address ?? 'Não informado'}</td>
-                  <td className="py-3 pr-3 text-slate-700">
+                <tr key={point.id} className="border-b border-slate-200 align-top dark:border-slate-800">
+                  <td className="py-3 pr-3 font-medium text-slate-900 dark:text-slate-100">{point.name ?? UNNAMED_POINT}</td>
+                  <td className="py-3 pr-3 text-slate-700 dark:text-slate-300">{point.address ?? 'Não informado'}</td>
+                  <td className="py-3 pr-3 text-slate-700 dark:text-slate-300">
                     {point.acceptedMaterials.map((material) => MATERIAL_LABELS[material]).join(', ')}
                   </td>
-                  <td className="py-3 pr-3 text-slate-700">
+                  <td className="py-3 pr-3 text-slate-700 dark:text-slate-300">
                     {point.sourceType ? SOURCE_LABELS[point.sourceType] : '—'}
                     {point.adminEditedAt && point.sourceType === 'OSM' && (
-                      <span className="block text-sm text-slate-600">revisado pela equipe</span>
+                      <span className="block text-sm text-slate-600 dark:text-slate-400">revisado pela equipe</span>
                     )}
                   </td>
                   <td className="py-3 pr-3">
@@ -320,16 +320,16 @@ export default function AdminPointsPage() {
           {/* Cards on phones */}
           <ul className="mt-3 space-y-3 md:hidden">
             {visible.map((point) => (
-              <li key={point.id} className="rounded-xl border border-slate-200 p-4">
+              <li key={point.id} className="rounded-xl border border-slate-200 p-4 dark:border-slate-800 dark:bg-slate-900/40">
                 <div className="flex items-start justify-between gap-3">
-                  <h2 className="font-semibold text-slate-900">{point.name ?? UNNAMED_POINT}</h2>
+                  <h2 className="font-semibold text-slate-900 dark:text-slate-100">{point.name ?? UNNAMED_POINT}</h2>
                   <StatusBadge status={point.status} />
                 </div>
-                <p className="mt-1 text-slate-700">{point.address ?? 'Endereço não informado'}</p>
-                <p className="mt-1 text-sm text-slate-600">
+                <p className="mt-1 text-slate-700 dark:text-slate-300">{point.address ?? 'Endereço não informado'}</p>
+                <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
                   {point.acceptedMaterials.map((material) => MATERIAL_LABELS[material]).join(', ')}
                 </p>
-                <p className="mt-1 text-sm text-slate-600">
+                <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
                   Origem: {point.sourceType ? SOURCE_LABELS[point.sourceType] : '—'}
                   {point.adminEditedAt && point.sourceType === 'OSM' && ', revisado pela equipe'}
                 </p>

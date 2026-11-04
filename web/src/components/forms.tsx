@@ -30,11 +30,11 @@ export function TextField({
 
   return (
     <div>
-      <label htmlFor={fieldId} className="block font-semibold text-slate-900">
+      <label htmlFor={fieldId} className="block font-semibold text-slate-900 dark:text-slate-100">
         {label}
       </label>
       {hint && (
-        <p id={hintId} className="mt-0.5 text-sm text-slate-600">
+        <p id={hintId} className="mt-0.5 text-sm text-slate-600 dark:text-slate-400">
           {hint}
         </p>
       )}
@@ -54,7 +54,7 @@ export function TextField({
             aria-label={showPassword ? `Ocultar ${label.toLowerCase()}` : `Mostrar ${label.toLowerCase()}`}
             aria-pressed={showPassword}
             title={showPassword ? 'Ocultar senha' : 'Ver senha'}
-            className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-500 hover:text-slate-900 focus:outline-none focus-visible:text-emerald-800"
+            className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-500 hover:text-slate-900 focus:outline-none focus-visible:text-emerald-800 dark:text-slate-400 dark:hover:text-slate-100 dark:focus-visible:text-emerald-400"
           >
             {showPassword ? <EyeOffIcon className="size-5" /> : <EyeIcon className="size-5" />}
           </button>
@@ -70,7 +70,7 @@ export function TextField({
         />
       )}
       {error && (
-        <p id={errorId} className="mt-1 text-sm font-medium text-red-800">
+        <p id={errorId} className="mt-1 text-sm font-medium text-red-800 dark:text-red-400">
           {error}
         </p>
       )}
@@ -85,11 +85,11 @@ export function TextAreaField({ label, hint, error, id, ...textarea }: FieldProp
   const errorId = error ? `${fieldId}-erro` : undefined
   return (
     <div>
-      <label htmlFor={fieldId} className="block font-semibold text-slate-900">
+      <label htmlFor={fieldId} className="block font-semibold text-slate-900 dark:text-slate-100">
         {label}
       </label>
       {hint && (
-        <p id={hintId} className="mt-0.5 text-sm text-slate-600">
+        <p id={hintId} className="mt-0.5 text-sm text-slate-600 dark:text-slate-400">
           {hint}
         </p>
       )}
@@ -101,7 +101,7 @@ export function TextAreaField({ label, hint, error, id, ...textarea }: FieldProp
         {...textarea}
       />
       {error && (
-        <p id={errorId} className="mt-1 text-sm font-medium text-red-800">
+        <p id={errorId} className="mt-1 text-sm font-medium text-red-800 dark:text-red-400">
           {error}
         </p>
       )}
@@ -112,9 +112,9 @@ export function TextAreaField({ label, hint, error, id, ...textarea }: FieldProp
 /** Message box: "error" is announced right away by screen readers, "success" and "info" politely. */
 export function Notice({ kind, children }: { kind: 'error' | 'success' | 'info'; children: ReactNode }) {
   const styles = {
-    error: 'border-red-200 bg-red-50 text-red-900',
-    success: 'border-emerald-200 bg-emerald-50 text-emerald-950',
-    info: 'border-slate-200 bg-slate-50 text-slate-800',
+    error: 'border-red-200 bg-red-50 text-red-900 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-200',
+    success: 'border-emerald-200 bg-emerald-50 text-emerald-950 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-200',
+    info: 'border-slate-200 bg-slate-50 text-slate-800 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200',
   }[kind]
   return (
     <div role={kind === 'error' ? 'alert' : 'status'} className={`rounded-lg border p-3 ${styles}`}>

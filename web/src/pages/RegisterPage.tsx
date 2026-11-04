@@ -95,8 +95,8 @@ export default function RegisterPage() {
     <div className={PAGE}>
       <title>Criar conta | E-Cicla</title>
       <div className="mx-auto max-w-md">
-        <h1 className="text-3xl font-bold text-slate-900">Criar conta</h1>
-        <p className="mt-2 text-lg text-slate-700">Leva menos de um minuto.</p>
+        <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">Criar conta</h1>
+        <p className="mt-2 text-lg text-slate-700 dark:text-slate-300">Leva menos de um minuto.</p>
 
         <form onSubmit={submit} noValidate className="mt-6 space-y-5">
           {formError && <Notice kind="error">{formError}</Notice>}
@@ -155,7 +155,7 @@ export default function RegisterPage() {
                 aria-describedby={errors.acceptPrivacy ? 'aceite-privacidade-erro' : undefined}
                 className="mt-1 size-5 shrink-0 accent-emerald-700"
               />
-              <label htmlFor="aceite-privacidade" className="text-slate-800">
+              <label htmlFor="aceite-privacidade" className="text-slate-800 dark:text-slate-200">
                 Li e concordo com a política de privacidade.
               </label>
             </div>
@@ -177,7 +177,7 @@ export default function RegisterPage() {
           </button>
         </form>
 
-        <p className="mt-6 text-center text-slate-700">
+        <p className="mt-6 text-center text-slate-700 dark:text-slate-300">
           Já tem conta?{' '}
           <Link to={next ? `/entrar?voltar=${encodeURIComponent(next)}` : '/entrar'} className={TEXT_LINK}>
             Entrar

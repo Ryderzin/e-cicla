@@ -254,11 +254,11 @@ export default function AdminPointFormPage() {
   return (
     <div className={PAGE}>
       <title>{`${title} | Administração | E-Cicla`}</title>
-      <Link to="/admin/pontos" className="inline-flex items-center gap-1 font-medium text-slate-700 hover:text-slate-950">
+      <Link to="/admin/pontos" className="inline-flex items-center gap-1 font-medium text-slate-700 hover:text-slate-950 dark:text-slate-300 dark:hover:text-slate-100">
         <BackIcon className="size-5" />
         Pontos de coleta
       </Link>
-      <h1 className="mt-3 text-3xl font-bold text-slate-900">{title}</h1>
+      <h1 className="mt-3 text-3xl font-bold text-slate-900 dark:text-slate-100">{title}</h1>
 
       {load.status === 'loading' && (
         <p role="status" className="mt-6 text-slate-700">
@@ -329,17 +329,17 @@ export default function AdminPointFormPage() {
                   type="button"
                   onClick={() => void lookupAddress(values.address)}
                   disabled={searchingAddress || !values.address.trim()}
-                  className="inline-flex h-[42px] shrink-0 items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-slate-50 px-3.5 text-sm font-semibold text-slate-800 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="inline-flex h-[42px] shrink-0 items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-slate-50 px-3.5 text-sm font-semibold text-slate-800 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
                   title="Localizar este endereço no mapa"
                 >
-                  <SearchIcon className="size-4 text-slate-600" />
+                  <SearchIcon className="size-4 text-slate-600 dark:text-slate-400" />
                   {searchingAddress ? 'Buscando…' : 'Localizar no mapa'}
                 </button>
               </div>
               {addressNotice && (
                 <p
                   className={`mt-1.5 text-sm font-medium ${
-                    addressNotice.kind === 'error' ? 'text-red-800' : 'text-emerald-800'
+                    addressNotice.kind === 'error' ? 'text-red-800 dark:text-red-400' : 'text-emerald-800 dark:text-emerald-400'
                   }`}
                 >
                   {addressNotice.text}
@@ -353,10 +353,10 @@ export default function AdminPointFormPage() {
               </p>
             )}
             <fieldset ref={materialsRef} aria-describedby={errors.acceptedMaterials ? 'materiais-erro' : undefined}>
-              <legend className="font-semibold text-slate-900">Materiais aceitos</legend>
+              <legend className="font-semibold text-slate-900 dark:text-slate-100">Materiais aceitos</legend>
               <div className="mt-2 grid gap-2 sm:grid-cols-2">
                 {MATERIALS.map((material) => (
-                  <label key={material} className="flex items-center gap-2 text-slate-800">
+                  <label key={material} className="flex items-center gap-2 text-slate-800 dark:text-slate-200">
                     <input
                       type="checkbox"
                       checked={values.acceptedMaterials.includes(material)}
@@ -398,7 +398,7 @@ export default function AdminPointFormPage() {
 
           <div className="space-y-4">
             <fieldset>
-              <legend className="font-semibold text-slate-900">Localização</legend>
+              <legend className="font-semibold text-slate-900 dark:text-slate-100">Localização</legend>
               <p className="mt-0.5 text-sm text-slate-600">
                 O mapa se posiciona pelo endereço ou clique no mapa para marcar o local. Também é possível ajustar as coordenadas.
               </p>

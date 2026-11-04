@@ -86,14 +86,14 @@ export default function MapPage() {
         <MapMessage role="alert">
           <div>
             <p className="font-semibold">Não foi possível carregar os pontos.</p>
-            <p className="mt-1 text-slate-600">Verifique sua conexão com a internet e tente de novo.</p>
+            <p className="mt-1 text-slate-600 dark:text-slate-400">Verifique sua conexão com a internet e tente de novo.</p>
             <button
               type="button"
               onClick={() => {
                 setState({ status: 'loading' })
                 setAttempt((value) => value + 1)
               }}
-              className="mt-3 rounded-lg bg-emerald-700 px-4 py-2 font-semibold text-white hover:bg-emerald-800"
+              className="mt-3 rounded-lg bg-emerald-700 px-4 py-2 font-semibold text-white hover:bg-emerald-800 dark:bg-emerald-600 dark:hover:bg-emerald-700"
             >
               Tentar de novo
             </button>
@@ -105,7 +105,7 @@ export default function MapPage() {
         <MapMessage role="status">
           <div>
             <p className="font-semibold">Ainda não há pontos de coleta no mapa.</p>
-            <p className="mt-1 text-slate-600">Estamos reunindo pontos de fontes públicas. Volte em breve.</p>
+            <p className="mt-1 text-slate-600 dark:text-slate-400">Estamos reunindo pontos de fontes públicas. Volte em breve.</p>
           </div>
         </MapMessage>
       )}
@@ -128,7 +128,7 @@ function MapMessage({ role, children }: { role: 'status' | 'alert'; children: Re
     <div className="pointer-events-none absolute inset-x-0 bottom-8 z-[1050] flex justify-center px-4 md:top-4 md:bottom-auto md:pl-[24.5rem]">
       <div
         role={role}
-        className="pointer-events-auto flex max-w-sm items-center gap-3 rounded-xl bg-white px-4 py-3 text-slate-900 shadow-lg"
+        className="pointer-events-auto flex max-w-sm items-center gap-3 rounded-xl border border-transparent bg-white px-4 py-3 text-slate-900 shadow-lg dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
       >
         {children}
       </div>

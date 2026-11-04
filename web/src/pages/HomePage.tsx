@@ -117,16 +117,16 @@ const QUESTIONS: { question: string; answer: string }[] = [
 // Most common first; "other devices" closes the list.
 const MATERIAL_ORDER: Material[] = ['MOBILE_PHONES', 'BATTERIES', 'COMPUTERS', 'SMALL_APPLIANCES', 'ELECTRICAL_ITEMS']
 
-const STAT_NUMBER = 'block text-2xl font-bold text-emerald-800 sm:text-4xl'
-const STAT_LABEL = 'mt-1 block text-sm text-slate-700 sm:text-base'
-const STAT_CARD = 'rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:p-5'
+const STAT_NUMBER = 'block text-2xl font-bold text-emerald-800 sm:text-4xl dark:text-emerald-400'
+const STAT_LABEL = 'mt-1 block text-sm text-slate-700 sm:text-base dark:text-slate-300'
+const STAT_CARD = 'rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:p-5 dark:border-slate-800 dark:bg-slate-900'
 
 const CARD_MOTION = 'motion-safe:transition motion-safe:duration-200 motion-safe:hover:-translate-y-1 hover:shadow-md'
 
 function MapButton({ inverted = false }: { inverted?: boolean }) {
   const colors = inverted
-    ? 'bg-white text-emerald-900 hover:bg-emerald-50'
-    : 'bg-emerald-700 text-white hover:bg-emerald-800'
+    ? 'bg-white text-emerald-900 hover:bg-emerald-50 dark:bg-slate-900 dark:text-emerald-300 dark:hover:bg-slate-800'
+    : 'bg-emerald-700 text-white hover:bg-emerald-800 dark:bg-emerald-600 dark:hover:bg-emerald-700'
   return (
     <Link
       to="/mapa"
@@ -157,7 +157,7 @@ function PointsCount() {
 
   if (failed) {
     return (
-      <p className="font-semibold text-slate-900 sm:text-lg">Pontos de coleta de fontes públicas num só mapa</p>
+      <p className="font-semibold text-slate-900 sm:text-lg dark:text-slate-100">Pontos de coleta de fontes públicas num só mapa</p>
     )
   }
   return (
@@ -182,7 +182,7 @@ function PointsCount() {
 
 function SectionTitle({ id, children }: { id: string; children: ReactNode }) {
   return (
-    <h2 id={id} className="text-2xl font-bold text-slate-900 md:text-3xl">
+    <h2 id={id} className="text-2xl font-bold text-slate-900 md:text-3xl dark:text-slate-100">
       {children}
     </h2>
   )
@@ -201,18 +201,18 @@ export default function HomePage() {
         </div>
       )}
 
-      <section aria-labelledby="inicio-titulo" className="relative overflow-hidden bg-emerald-50">
+      <section aria-labelledby="inicio-titulo" className="relative overflow-hidden bg-emerald-50 dark:bg-slate-900/60">
         <div className="mx-auto grid max-w-6xl items-center gap-12 px-4 pt-14 pb-24 md:grid-cols-[1.1fr_1fr] md:pt-20 md:pb-32">
           <div>
-            <h1 id="inicio-titulo" className="max-w-3xl text-4xl font-bold tracking-tight text-slate-900 md:text-5xl">
+            <h1 id="inicio-titulo" className="max-w-3xl text-4xl font-bold tracking-tight text-slate-900 md:text-5xl dark:text-slate-100">
               Descarte seu lixo eletrônico no lugar certo
             </h1>
-            <p className="mt-5 max-w-2xl text-lg text-slate-700">
+            <p className="mt-5 max-w-2xl text-lg text-slate-700 dark:text-slate-300">
               O E-Cicla mostra no mapa onde entregar celulares, pilhas, carregadores e outros aparelhos que você não usa
               mais. Para consultar os pontos de coleta, não é preciso criar conta.
             </p>
             <HeroSearch />
-            <p className="mt-4 text-slate-700">
+            <p className="mt-4 text-slate-700 dark:text-slate-300">
               Prefere explorar?{' '}
               <Link to="/mapa" className={TEXT_LINK}>
                 Ver todos os pontos no mapa
@@ -228,7 +228,7 @@ export default function HomePage() {
           preserveAspectRatio="none"
           className="absolute inset-x-0 bottom-0 h-12 w-full md:h-16"
         >
-          <path d="M0 40 C 240 90, 480 0, 720 30 S 1200 80, 1440 30 L 1440 80 L 0 80 Z" fill="#ffffff" />
+          <path d="M0 40 C 240 90, 480 0, 720 30 S 1200 80, 1440 30 L 1440 80 L 0 80 Z" className="fill-white dark:fill-slate-950" />
         </svg>
       </section>
 
@@ -250,11 +250,11 @@ export default function HomePage() {
         <Reveal className="mx-auto grid max-w-6xl items-center gap-10 px-4 py-14 md:grid-cols-2">
           <div>
             <SectionTitle id="o-que-e-titulo">O que é lixo eletrônico?</SectionTitle>
-            <p className="mt-3 text-lg text-slate-700">
+            <p className="mt-3 text-lg text-slate-700 dark:text-slate-300">
               É todo aparelho elétrico ou eletrônico que quebrou, ficou velho ou que você não usa mais, e também as peças
               e os acessórios dele. Alguns exemplos do dia a dia:
             </p>
-            <ul className="mt-5 list-disc space-y-2 pl-6 text-lg text-slate-800 marker:text-emerald-700">
+            <ul className="mt-5 list-disc space-y-2 pl-6 text-lg text-slate-800 dark:text-slate-200 marker:text-emerald-700 dark:marker:text-emerald-400">
               {EXAMPLES.map((example) => (
                 <li key={example}>{example}</li>
               ))}
@@ -271,23 +271,23 @@ export default function HomePage() {
         </Reveal>
       </section>
 
-      <section aria-labelledby="por-que-titulo" className="bg-slate-50">
+      <section aria-labelledby="por-que-titulo" className="bg-slate-50 dark:bg-slate-900/40">
         {/* TODO: revisar texto */}
         <div className="mx-auto max-w-6xl px-4 py-14">
           <Reveal>
             <SectionTitle id="por-que-titulo">Por que não jogar no lixo comum?</SectionTitle>
           </Reveal>
           <div className="mt-6 grid gap-6 md:grid-cols-2">
-            <Reveal className={`rounded-xl border border-amber-200 bg-white p-5 ${CARD_MOTION}`}>
-              <h3 className="text-lg font-semibold text-slate-900">Pode contaminar o solo e a água</h3>
-              <p className="mt-3 text-slate-700">
+            <Reveal className={`rounded-xl border border-amber-200 bg-white p-5 ${CARD_MOTION} dark:border-amber-900/50 dark:bg-slate-900`}>
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Pode contaminar o solo e a água</h3>
+              <p className="mt-3 text-slate-700 dark:text-slate-300">
                 Muitos aparelhos têm substâncias tóxicas, como chumbo, mercúrio e cádmio. Jogados no lixo comum, eles vão
                 parar em lixões e aterros, onde essas substâncias podem se soltar e contaminar o solo e a água.
               </p>
             </Reveal>
-            <Reveal className={`rounded-xl border border-emerald-200 bg-white p-5 ${CARD_MOTION}`} delay={100}>
-              <h3 className="text-lg font-semibold text-slate-900">No ponto de coleta, vira reciclagem</h3>
-              <p className="mt-3 text-slate-700">
+            <Reveal className={`rounded-xl border border-emerald-200 bg-white p-5 ${CARD_MOTION} dark:border-emerald-900/50 dark:bg-slate-900`} delay={100}>
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">No ponto de coleta, vira reciclagem</h3>
+              <p className="mt-3 text-slate-700 dark:text-slate-300">
                 Entregues num ponto de coleta, os aparelhos seguem para reciclagem: metais e plásticos podem ser
                 reaproveitados e as partes perigosas recebem o tratamento adequado.
               </p>
@@ -304,15 +304,15 @@ export default function HomePage() {
           <ol className="mt-8 grid gap-6 md:grid-cols-3">
             {STEPS.map(({ icon, title, text }, index) => (
               <li key={title}>
-                <Reveal className={`h-full rounded-xl border border-slate-200 p-5 ${CARD_MOTION}`} delay={index * 120}>
+                <Reveal className={`h-full rounded-xl border border-slate-200 p-5 ${CARD_MOTION} dark:border-slate-800 dark:bg-slate-900/40`} delay={index * 120}>
                   <div className="flex items-center gap-3">
                     <span className="flex size-9 items-center justify-center rounded-full bg-emerald-700 font-bold text-white">
                       {index + 1}
                     </span>
-                    <span className="text-emerald-800">{icon}</span>
+                    <span className="text-emerald-800 dark:text-emerald-400">{icon}</span>
                   </div>
-                  <h3 className="mt-4 text-lg font-semibold text-slate-900">{title}</h3>
-                  <p className="mt-2 text-slate-700">{text}</p>
+                  <h3 className="mt-4 text-lg font-semibold text-slate-900 dark:text-slate-100">{title}</h3>
+                  <p className="mt-2 text-slate-700 dark:text-slate-300">{text}</p>
                 </Reveal>
               </li>
             ))}
@@ -320,11 +320,11 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section aria-labelledby="o-que-levar-titulo" className="bg-emerald-50">
+      <section aria-labelledby="o-que-levar-titulo" className="bg-emerald-50 dark:bg-slate-900/60">
         <div className="mx-auto max-w-6xl px-4 py-14">
           <Reveal>
             <SectionTitle id="o-que-levar-titulo">O que você pode levar</SectionTitle>
-            <p className="mt-3 max-w-3xl text-lg text-slate-700">
+            <p className="mt-3 max-w-3xl text-lg text-slate-700 dark:text-slate-300">
               Cada ponto de coleta aceita alguns destes tipos de material. No mapa, os detalhes do ponto mostram quais.
             </p>
           </Reveal>
@@ -332,15 +332,15 @@ export default function HomePage() {
             {MATERIAL_ORDER.map((material, index) => (
               <li key={material}>
                 <Reveal
-                  className={`flex h-full gap-4 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-emerald-100 sm:block sm:p-5 ${CARD_MOTION}`}
+                  className={`flex h-full gap-4 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-emerald-100 sm:block sm:p-5 ${CARD_MOTION} dark:bg-slate-900 dark:ring-emerald-900/40`}
                   delay={index * 80}
                 >
-                  <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-800">
+                  <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
                     {MATERIAL_CARDS[material].icon}
                   </span>
                   <div>
-                    <h3 className="font-semibold text-slate-900 sm:mt-4">{MATERIAL_LABELS[material]}</h3>
-                    <p className="mt-1 text-slate-700 sm:mt-2">{MATERIAL_CARDS[material].text}</p>
+                    <h3 className="font-semibold text-slate-900 sm:mt-4 dark:text-slate-100">{MATERIAL_LABELS[material]}</h3>
+                    <p className="mt-1 text-slate-700 sm:mt-2 dark:text-slate-300">{MATERIAL_CARDS[material].text}</p>
                   </div>
                 </Reveal>
               </li>
@@ -353,20 +353,20 @@ export default function HomePage() {
         <div className="mx-auto grid max-w-6xl gap-10 px-4 py-14 md:grid-cols-[1fr_1.4fr]">
           <Reveal className="md:sticky md:top-8 md:self-start">
             <SectionTitle id="antes-titulo">Antes de levar seu aparelho</SectionTitle>
-            <p className="mt-3 text-lg text-slate-700">
+            <p className="mt-3 text-lg text-slate-700 dark:text-slate-300">
               Alguns cuidados rápidos protegem seus dados e evitam uma viagem perdida.
             </p>
           </Reveal>
           <ul className="space-y-3">
             {TIPS.map(({ title, text }, index) => (
               <li key={title}>
-                <Reveal className="flex gap-4 rounded-xl border border-slate-200 p-4" delay={index * 80}>
+                <Reveal className="flex gap-4 rounded-xl border border-slate-200 p-4 dark:border-slate-800 dark:bg-slate-900/40" delay={index * 80}>
                   <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-emerald-700 text-white">
                     <CheckIcon className="size-5" />
                   </span>
                   <span>
-                    <span className="block font-semibold text-slate-900">{title}</span>
-                    <span className="mt-0.5 block text-slate-700">{text}</span>
+                    <span className="block font-semibold text-slate-900 dark:text-slate-100">{title}</span>
+                    <span className="mt-0.5 block text-slate-700 dark:text-slate-300">{text}</span>
                   </span>
                 </Reveal>
               </li>
@@ -375,26 +375,26 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section aria-labelledby="perguntas-titulo" className="bg-slate-50">
+      <section aria-labelledby="perguntas-titulo" className="bg-slate-50 dark:bg-slate-900/40">
         <div className="mx-auto max-w-3xl px-4 py-14">
           <Reveal>
             <SectionTitle id="perguntas-titulo">Perguntas frequentes</SectionTitle>
           </Reveal>
           <div className="mt-6 space-y-3">
             {QUESTIONS.map(({ question, answer }) => (
-              <details key={question} className="group rounded-xl border border-slate-200 bg-white">
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 rounded-xl p-4 font-semibold text-slate-900 hover:bg-slate-50 [&::-webkit-details-marker]:hidden">
+              <details key={question} className="group rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 rounded-xl p-4 font-semibold text-slate-900 hover:bg-slate-50 dark:text-slate-100 dark:hover:bg-slate-800/60 [&::-webkit-details-marker]:hidden">
                   {question}
-                  <ChevronDownIcon className="size-5 shrink-0 text-slate-600 motion-safe:transition-transform group-open:rotate-180" />
+                  <ChevronDownIcon className="size-5 shrink-0 text-slate-600 motion-safe:transition-transform group-open:rotate-180 dark:text-slate-400" />
                 </summary>
-                <p className="px-4 pb-4 text-slate-700">{answer}</p>
+                <p className="px-4 pb-4 text-slate-700 dark:text-slate-300">{answer}</p>
               </details>
             ))}
           </div>
         </div>
       </section>
 
-      <section aria-labelledby="chamada-titulo" className="bg-emerald-800">
+      <section aria-labelledby="chamada-titulo" className="bg-emerald-800 dark:bg-emerald-950">
         <Reveal className="mx-auto flex max-w-6xl flex-col items-start gap-6 px-4 py-14 md:flex-row md:items-center md:justify-between">
           <div>
             <h2 id="chamada-titulo" className="text-2xl font-bold text-white md:text-3xl">
@@ -416,11 +416,11 @@ export default function HomePage() {
         </Reveal>
       </section>
 
-      <div className="border-t border-slate-200 bg-slate-50">
-        <p className="mx-auto max-w-6xl px-4 py-6 text-sm text-slate-600">
+      <div className="border-t border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900">
+        <p className="mx-auto max-w-6xl px-4 py-6 text-sm text-slate-600 dark:text-slate-400">
           Os pontos de coleta vêm de fontes públicas (OpenStreetMap e órgãos públicos) e de sugestões da comunidade
           verificadas pela equipe.{' '}
-          <Link to="/privacidade" className="font-medium text-slate-700 underline underline-offset-4">
+          <Link to="/privacidade" className="font-medium text-slate-700 underline underline-offset-4 dark:text-slate-300">
             Política de privacidade
           </Link>
         </p>

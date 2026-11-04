@@ -98,7 +98,7 @@ export default function LocationPicker({
       maxBounds={MAX_BOUNDS}
       maxBoundsViscosity={1}
       keyboard={false}
-      className="h-72 w-full rounded-xl border border-slate-300"
+      className="h-72 w-full rounded-xl border border-slate-300 dark:border-slate-700"
     >
       <TileLayer attribution={OSM_ATTRIBUTION} url={OSM_TILES} />
       <ClickToPlace onChange={onChange} />

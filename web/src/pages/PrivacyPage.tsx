@@ -6,10 +6,10 @@ import { PAGE, TEXT_LINK } from '../lib/ui.ts'
 function Section({ id, title, children }: { id: string; title: string; children: ReactNode }) {
   return (
     <section aria-labelledby={id} className="mt-8">
-      <h2 id={id} className="text-xl font-bold text-slate-900">
+      <h2 id={id} className="text-xl font-bold text-slate-900 dark:text-slate-100">
         {title}
       </h2>
-      <div className="mt-2 space-y-3 text-lg text-slate-800">{children}</div>
+      <div className="mt-2 space-y-3 text-lg text-slate-800 dark:text-slate-200">{children}</div>
     </section>
   )
 }
@@ -21,9 +21,9 @@ export default function PrivacyPage() {
     <div className={PAGE}>
       <title>Política de privacidade | E-Cicla</title>
       <article className="mx-auto max-w-3xl">
-        <h1 className="text-3xl font-bold text-slate-900">Política de privacidade</h1>
-        <p className="mt-2 text-slate-600">Atualizada em 18 de outubro de 2026.</p>
-        <p className="mt-4 text-lg text-slate-800">
+        <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">Política de privacidade</h1>
+        <p className="mt-2 text-slate-600 dark:text-slate-400">Atualizada em 18 de outubro de 2026.</p>
+        <p className="mt-4 text-lg text-slate-800 dark:text-slate-200">
           O E-Cicla é um projeto acadêmico da Fatec Zona Leste. Esta página explica, de forma simples, quais dados
           pessoais a plataforma usa, para quê e quais são os seus direitos, de acordo com a Lei Geral de Proteção de
           Dados (Lei nº 13.709/2018).
@@ -54,7 +54,7 @@ export default function PrivacyPage() {
 
         <Section id="conta" title="Se você cria uma conta e envia sugestões">
           <p>O E-Cicla guarda:</p>
-          <ul className="list-disc space-y-1 pl-6 marker:text-emerald-700">
+          <ul className="list-disc space-y-1 pl-6 marker:text-emerald-700 dark:marker:text-emerald-400">
             <li>seu nome e seu e-mail, para identificar a sua conta;</li>
             <li>
               sua senha, apenas de forma protegida: guardamos um código calculado a partir dela, que não permite

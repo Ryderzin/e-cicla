@@ -46,9 +46,9 @@ export default function HeroSearch() {
   }
 
   return (
-    <div className="mt-8 max-w-xl rounded-2xl bg-white p-4 shadow-lg ring-1 ring-emerald-100 sm:p-5">
+    <div className="mt-8 max-w-xl rounded-2xl bg-white p-4 shadow-lg ring-1 ring-emerald-100 sm:p-5 dark:bg-slate-900 dark:ring-emerald-900/40">
       <form role="search" aria-label="Pontos de coleta perto de um local" onSubmit={submit}>
-        <label htmlFor="busca-inicio" className="block font-semibold text-slate-900">
+        <label htmlFor="busca-inicio" className="block font-semibold text-slate-900 dark:text-slate-100">
           Onde você está?
         </label>
         <div className="mt-2 flex gap-2">
@@ -62,11 +62,11 @@ export default function HeroSearch() {
             value={text}
             onChange={(event) => setText(event.target.value)}
             aria-describedby="busca-inicio-situacao"
-            className="min-w-0 flex-1 rounded-lg border border-slate-500 px-3 py-3 text-slate-900 placeholder:text-slate-500"
+            className="min-w-0 flex-1 rounded-lg border border-slate-500 px-3 py-3 text-slate-900 placeholder:text-slate-500 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-400"
           />
           <button
             type="submit"
-            className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-emerald-700 px-4 py-3 font-semibold text-white shadow-sm hover:bg-emerald-800"
+            className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-emerald-700 px-4 py-3 font-semibold text-white shadow-sm hover:bg-emerald-800 dark:bg-emerald-600 dark:hover:bg-emerald-700"
           >
             <SearchIcon className="size-5" />
             <span className="sr-only sm:not-sr-only">Buscar</span>
@@ -74,20 +74,20 @@ export default function HeroSearch() {
         </div>
       </form>
       <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
-        <span className="text-sm text-slate-600">ou</span>
+        <span className="text-sm text-slate-600 dark:text-slate-400">ou</span>
         <button
           type="button"
           onClick={nearMe}
           disabled={state.status === 'locating'}
-          className="inline-flex items-center gap-2 rounded-lg border border-emerald-700 px-3 py-2 font-semibold text-emerald-800 hover:bg-emerald-50 disabled:border-slate-300 disabled:text-slate-500"
+          className="inline-flex items-center gap-2 rounded-lg border border-emerald-700 px-3 py-2 font-semibold text-emerald-800 hover:bg-emerald-50 disabled:border-slate-300 disabled:text-slate-500 dark:border-emerald-500 dark:text-emerald-400 dark:hover:bg-emerald-950/40 dark:disabled:border-slate-700 dark:disabled:text-slate-600"
         >
           <LocateIcon className="size-5" />
           Usar minha localização
         </button>
       </div>
       <p id="busca-inicio-situacao" role="status" className="mt-2 text-sm empty:mt-0">
-        {state.status === 'locating' && <span className="text-slate-700">Buscando a sua localização…</span>}
-        {state.status === 'error' && <span className="font-medium text-red-800">{state.message}</span>}
+        {state.status === 'locating' && <span className="text-slate-700 dark:text-slate-300">Buscando a sua localização…</span>}
+        {state.status === 'error' && <span className="font-medium text-red-800 dark:text-red-400">{state.message}</span>}
       </p>
     </div>
   )

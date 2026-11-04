@@ -51,8 +51,8 @@ export default function LoginPage() {
     <div className={PAGE}>
       <title>Entrar | E-Cicla</title>
       <div className="mx-auto max-w-md">
-        <h1 className="text-3xl font-bold text-slate-900">Entrar</h1>
-        <p className="mt-2 text-lg text-slate-700">
+        <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">Entrar</h1>
+        <p className="mt-2 text-lg text-slate-700 dark:text-slate-300">
           Entre para usar as funções da sua conta. Para consultar o mapa de pontos, não é preciso entrar.
         </p>
 
@@ -91,7 +91,7 @@ export default function LoginPage() {
             <div className="flex justify-end">
               <Link
                 to="/esqueci-minha-senha"
-                className="text-sm font-semibold text-emerald-800 underline underline-offset-4 hover:text-emerald-950"
+                className="text-sm font-semibold text-emerald-800 underline underline-offset-4 hover:text-emerald-950 dark:text-emerald-400 dark:hover:text-emerald-300"
               >
                 Esqueci minha senha
               </Link>
@@ -102,8 +102,8 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <div className="mt-8 border-t border-slate-200 pt-6">
-          <p className="text-slate-700">Ainda não tem conta?</p>
+        <div className="mt-8 border-t border-slate-200 pt-6 dark:border-slate-800">
+          <p className="text-slate-700 dark:text-slate-300">Ainda não tem conta?</p>
           <Link to={next ? `/criar-conta?voltar=${encodeURIComponent(next)}` : '/criar-conta'} className={`${SECONDARY_BUTTON} mt-3 w-full`}>
             Criar conta
           </Link>

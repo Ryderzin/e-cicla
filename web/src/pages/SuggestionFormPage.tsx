@@ -359,12 +359,12 @@ export default function SuggestionFormPage() {
   return (
     <div className={PAGE}>
       <title>{`${pageTitle} | E-Cicla`}</title>
-      <Link to="/sugestoes" className="inline-flex items-center gap-1 font-medium text-slate-700 hover:text-slate-950">
+      <Link to="/sugestoes" className="inline-flex items-center gap-1 font-medium text-slate-700 hover:text-slate-950 dark:text-slate-300 dark:hover:text-slate-100">
         <BackIcon className="size-5" />
         Minhas sugestões
       </Link>
-      <h1 className="mt-3 text-3xl font-bold text-slate-900">{pageTitle}</h1>
-      <p className="mt-1 text-lg text-slate-700">
+      <h1 className="mt-3 text-3xl font-bold text-slate-900 dark:text-slate-100">{pageTitle}</h1>
+      <p className="mt-1 text-lg text-slate-700 dark:text-slate-300">
         {load.status === 'ready' && load.type === 'POINT_UPDATE'
           ? 'Altere apenas os campos que precisam de correção. A equipe do E-Cicla vai conferir antes de atualizar o mapa.'
           : 'Informe os dados do ponto de coleta. Um administrador vai conferir as informações antes de publicá-lo no mapa.'}
@@ -434,17 +434,17 @@ export default function SuggestionFormPage() {
                   type="button"
                   onClick={() => void lookupAddress(values.address)}
                   disabled={searchingAddress || !values.address.trim()}
-                  className="inline-flex h-[42px] shrink-0 items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-slate-50 px-3.5 text-sm font-semibold text-slate-800 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="inline-flex h-[42px] shrink-0 items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-slate-50 px-3.5 text-sm font-semibold text-slate-800 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
                   title="Localizar este endereço no mapa"
                 >
-                  <SearchIcon className="size-4 text-slate-600" />
+                  <SearchIcon className="size-4 text-slate-600 dark:text-slate-400" />
                   {searchingAddress ? 'Buscando…' : 'Localizar no mapa'}
                 </button>
               </div>
               {addressNotice && (
                 <p
                   className={`mt-1.5 text-sm font-medium ${
-                    addressNotice.kind === 'error' ? 'text-red-800' : 'text-emerald-800'
+                    addressNotice.kind === 'error' ? 'text-red-800 dark:text-red-400' : 'text-emerald-800 dark:text-emerald-400'
                   }`}
                 >
                   {addressNotice.text}
@@ -453,10 +453,10 @@ export default function SuggestionFormPage() {
             </div>
 
             <fieldset ref={materialsRef} aria-describedby={errors.acceptedMaterials ? 'materiais-erro' : undefined}>
-              <legend className="font-semibold text-slate-900">Materiais aceitos (obrigatório)</legend>
+              <legend className="font-semibold text-slate-900 dark:text-slate-100">Materiais aceitos (obrigatório)</legend>
               <div className="mt-2 grid gap-2 sm:grid-cols-2">
                 {MATERIALS.map((material) => (
-                  <label key={material} className="flex items-center gap-2 text-slate-800">
+                  <label key={material} className="flex items-center gap-2 text-slate-800 dark:text-slate-200">
                     <input
                       type="checkbox"
                       checked={values.acceptedMaterials.includes(material)}
@@ -510,8 +510,8 @@ export default function SuggestionFormPage() {
 
           <div className="space-y-4">
             <fieldset aria-describedby={errors.latitude ? 'localizacao-erro' : undefined}>
-              <legend className="font-semibold text-slate-900">Localização no mapa (obrigatório)</legend>
-              <p className="mt-0.5 text-sm text-slate-600">
+              <legend className="font-semibold text-slate-900 dark:text-slate-100">Localização no mapa (obrigatório)</legend>
+              <p className="mt-0.5 text-sm text-slate-600 dark:text-slate-400">
                 O mapa se posiciona automaticamente pelo endereço. Você também pode clicar no mapa ou arrastar o
                 marcador para ajustar a entrada ou coletor.
               </p>

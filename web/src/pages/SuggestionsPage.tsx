@@ -19,15 +19,15 @@ type ListState = { status: 'loading' } | { status: 'error' } | { status: 'succes
 const STATUS_BADGE: Record<SuggestionStatus, { label: string; className: string }> = {
   PENDING: {
     label: 'Em análise',
-    className: 'bg-amber-100 text-amber-950',
+    className: 'bg-amber-100 text-amber-950 dark:bg-amber-950/60 dark:text-amber-200',
   },
   APPROVED: {
     label: 'Aprovada',
-    className: 'bg-emerald-100 text-emerald-900',
+    className: 'bg-emerald-100 text-emerald-900 dark:bg-emerald-950/60 dark:text-emerald-200',
   },
   REJECTED: {
     label: 'Não aprovada',
-    className: 'bg-red-100 text-red-900',
+    className: 'bg-red-100 text-red-900 dark:bg-red-950/60 dark:text-red-200',
   },
 }
 
@@ -78,9 +78,9 @@ export default function SuggestionsPage() {
     return (
       <div className={PAGE}>
         <title>Sugestões de pontos | E-Cicla</title>
-        <div className="mx-auto max-w-2xl rounded-2xl border border-slate-200 bg-white p-6 sm:p-8">
-          <h1 className="text-3xl font-bold text-slate-900">Sugira pontos e ajude sua região</h1>
-          <p className="mt-3 text-lg text-slate-700">
+        <div className="mx-auto max-w-2xl rounded-2xl border border-slate-200 bg-white p-6 sm:p-8 dark:border-slate-800 dark:bg-slate-900">
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">Sugira pontos e ajude sua região</h1>
+          <p className="mt-3 text-lg text-slate-700 dark:text-slate-300">
             Conhece um ponto de coleta de lixo eletrônico que ainda não está no mapa, ou viu alguma informação que
             mudou? Com uma conta gratuita, você pode enviar sugestões e acompanhar a avaliação da equipe do E-Cicla.
           </p>
@@ -129,7 +129,7 @@ export default function SuggestionsPage() {
 
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">Minhas sugestões</h1>
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">Minhas sugestões</h1>
           <p className="mt-1 text-lg text-slate-700">
             Sugira novos pontos de coleta ou acompanhe as correções que você enviou. Para corrigir um ponto que já
             existe, abra-o no{' '}
@@ -175,9 +175,9 @@ export default function SuggestionsPage() {
       )}
 
       {state.status === 'success' && state.items.length === 0 && (
-        <div className="mt-8 rounded-2xl border border-slate-200 bg-slate-50 p-6">
-          <h2 className="text-xl font-semibold text-slate-900">Você ainda não enviou nenhuma sugestão</h2>
-          <p className="mt-2 text-slate-700">
+        <div className="mt-8 rounded-2xl border border-slate-200 bg-slate-50 p-6 dark:border-slate-800 dark:bg-slate-900/60">
+          <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100">Você ainda não enviou nenhuma sugestão</h2>
+          <p className="mt-2 text-slate-700 dark:text-slate-300">
             Ajude outras pessoas a descartar seus aparelhos corretamente indicando um ponto de coleta da sua cidade ou
             sugerindo correções num ponto do mapa.
           </p>
@@ -201,43 +201,43 @@ export default function SuggestionsPage() {
             const title = item.proposed.name ?? item.currentPointName ?? UNNAMED_POINT
             const confirmingDelete = confirmDeleteId === item.id
             return (
-              <li key={item.id} className="rounded-xl border border-slate-200 bg-white p-5 shadow-xs">
+              <li key={item.id} className="rounded-xl border border-slate-200 bg-white p-5 shadow-xs dark:border-slate-800 dark:bg-slate-900">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <span className="text-sm font-medium text-slate-600">
+                    <span className="text-sm font-medium text-slate-600 dark:text-slate-400">
                       {item.type === 'NEW_POINT'
                         ? 'Sugestão de novo ponto'
                         : `Sugestão de correção${item.currentPointName ? ` em “${item.currentPointName}”` : ''}`}
                       {' · '}Enviada em {formatDate(item.createdAt)}
                     </span>
-                    <h2 className="mt-1 text-xl font-bold text-slate-900">{title}</h2>
+                    <h2 className="mt-1 text-xl font-bold text-slate-900 dark:text-slate-100">{title}</h2>
                   </div>
                   <span className={`rounded-full px-3 py-1 text-sm font-semibold ${badge.className}`}>
                     {badge.label}
                   </span>
                 </div>
 
-                <dl className="mt-4 grid gap-3 text-slate-700 sm:grid-cols-2">
+                <dl className="mt-4 grid gap-3 text-slate-700 sm:grid-cols-2 dark:text-slate-300">
                   <div>
-                    <dt className="text-sm font-semibold text-slate-600">Endereço proposto</dt>
-                    <dd className="mt-0.5 text-slate-900">{item.proposed.address ?? 'Não informado'}</dd>
+                    <dt className="text-sm font-semibold text-slate-600 dark:text-slate-400">Endereço proposto</dt>
+                    <dd className="mt-0.5 text-slate-900 dark:text-slate-100">{item.proposed.address ?? 'Não informado'}</dd>
                   </div>
                   <div>
-                    <dt className="text-sm font-semibold text-slate-600">Materiais aceitos</dt>
-                    <dd className="mt-0.5 text-slate-900">
+                    <dt className="text-sm font-semibold text-slate-600 dark:text-slate-400">Materiais aceitos</dt>
+                    <dd className="mt-0.5 text-slate-900 dark:text-slate-100">
                       {item.proposed.acceptedMaterials.map((m) => MATERIAL_LABELS[m]).join(', ')}
                     </dd>
                   </div>
                   {item.proposed.openingHours && (
                     <div>
-                      <dt className="text-sm font-semibold text-slate-600">Horário de funcionamento</dt>
-                      <dd className="mt-0.5 text-slate-900">{item.proposed.openingHours}</dd>
+                      <dt className="text-sm font-semibold text-slate-600 dark:text-slate-400">Horário de funcionamento</dt>
+                      <dd className="mt-0.5 text-slate-900 dark:text-slate-100">{item.proposed.openingHours}</dd>
                     </div>
                   )}
                   {item.comment && (
                     <div className="sm:col-span-2">
-                      <dt className="text-sm font-semibold text-slate-600">Seu comentário</dt>
-                      <dd className="mt-0.5 text-slate-900">{item.comment}</dd>
+                      <dt className="text-sm font-semibold text-slate-600 dark:text-slate-400">Seu comentário</dt>
+                      <dd className="mt-0.5 text-slate-900 dark:text-slate-100">{item.comment}</dd>
                     </div>
                   )}
                 </dl>
@@ -246,8 +246,8 @@ export default function SuggestionsPage() {
                   <div
                     className={`mt-4 rounded-lg border p-3 text-sm ${
                       item.status === 'APPROVED'
-                        ? 'border-emerald-200 bg-emerald-50 text-emerald-950'
-                        : 'border-red-200 bg-red-50 text-red-950'
+                        ? 'border-emerald-200 bg-emerald-50 text-emerald-950 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-200'
+                        : 'border-red-200 bg-red-50 text-red-950 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-200'
                     }`}
                   >
                     <p className="font-semibold">
@@ -260,7 +260,7 @@ export default function SuggestionsPage() {
                 )}
 
                 {item.status === 'PENDING' && !confirmingDelete && (
-                  <div className="mt-4 flex flex-wrap gap-4 border-t border-slate-100 pt-3">
+                  <div className="mt-4 flex flex-wrap gap-4 border-t border-slate-100 pt-3 dark:border-slate-800">
                     <Link
                       to={`/sugestoes/${item.id}/editar`}
                       className="inline-flex items-center gap-1 font-semibold text-emerald-800 underline underline-offset-4"

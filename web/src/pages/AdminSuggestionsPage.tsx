@@ -22,9 +22,9 @@ const FILTERS: { value: StatusFilter; label: string }[] = [
 ]
 
 const STATUS_BADGE: Record<SuggestionStatus, { label: string; className: string }> = {
-  PENDING: { label: 'Em análise', className: 'bg-amber-100 text-amber-950' },
-  APPROVED: { label: 'Aprovada', className: 'bg-emerald-100 text-emerald-900' },
-  REJECTED: { label: 'Não aprovada', className: 'bg-red-100 text-red-900' },
+  PENDING: { label: 'Em análise', className: 'bg-amber-100 text-amber-950 dark:bg-amber-950/60 dark:text-amber-200' },
+  APPROVED: { label: 'Aprovada', className: 'bg-emerald-100 text-emerald-900 dark:bg-emerald-950/60 dark:text-emerald-200' },
+  REJECTED: { label: 'Não aprovada', className: 'bg-red-100 text-red-900 dark:bg-red-950/60 dark:text-red-200' },
 }
 
 function formatDate(iso: string): string {
@@ -81,12 +81,12 @@ export default function AdminSuggestionsPage() {
 
       <div className="mt-6">
         <fieldset>
-          <legend className="font-semibold text-slate-900">Situação</legend>
-          <div className="mt-1 inline-flex flex-wrap rounded-lg bg-slate-100 p-1">
+          <legend className="font-semibold text-slate-900 dark:text-slate-100">Situação</legend>
+          <div className="mt-1 inline-flex flex-wrap rounded-lg bg-slate-100 p-1 dark:bg-slate-800/80">
             {FILTERS.map(({ value, label }) => (
               <label
                 key={value}
-                className="cursor-pointer rounded-md px-3 py-1.5 font-medium text-slate-700 has-[:checked]:bg-white has-[:checked]:text-slate-950 has-[:checked]:shadow-sm has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-blue-700"
+                className="cursor-pointer rounded-md px-3 py-1.5 font-medium text-slate-700 has-[:checked]:bg-white has-[:checked]:text-slate-950 has-[:checked]:shadow-sm has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-blue-700 dark:text-slate-300 dark:has-[:checked]:bg-slate-900 dark:has-[:checked]:text-slate-100"
               >
                 <input
                   type="radio"
@@ -135,7 +135,7 @@ export default function AdminSuggestionsPage() {
           </p>
 
           {visible.length === 0 ? (
-            <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-6 text-slate-700">
+            <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-6 text-slate-700 dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-300">
               Nenhuma sugestão encontrada para este filtro.
             </div>
           ) : (
@@ -144,31 +144,31 @@ export default function AdminSuggestionsPage() {
                 const badge = STATUS_BADGE[item.status]
                 const title = item.proposed.name ?? item.currentPointName ?? UNNAMED_POINT
                 return (
-                  <li key={item.id} className="rounded-xl border border-slate-200 bg-white p-5">
+                  <li key={item.id} className="rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div>
-                        <span className="text-sm font-medium text-slate-600">
+                        <span className="text-sm font-medium text-slate-600 dark:text-slate-400">
                           {item.type === 'NEW_POINT'
                             ? 'Novo ponto'
                             : `Correção${item.currentPointName ? ` em “${item.currentPointName}”` : ''}`}
                           {' · '}Enviada em {formatDate(item.createdAt)}
                         </span>
-                        <h2 className="mt-1 text-xl font-bold text-slate-900">{title}</h2>
+                        <h2 className="mt-1 text-xl font-bold text-slate-900 dark:text-slate-100">{title}</h2>
                       </div>
                       <span className={`rounded-full px-3 py-1 text-sm font-semibold ${badge.className}`}>
                         {badge.label}
                       </span>
                     </div>
 
-                    <p className="mt-2 text-slate-700">
+                    <p className="mt-2 text-slate-700 dark:text-slate-300">
                       <span className="font-semibold">Endereço:</span> {item.proposed.address ?? 'Não informado'}
                     </p>
-                    <p className="mt-1 text-sm text-slate-600">
+                    <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
                       <span className="font-semibold">Materiais:</span>{' '}
                       {item.proposed.acceptedMaterials.map((m) => MATERIAL_LABELS[m]).join(', ')}
                     </p>
                     {item.comment && (
-                      <p className="mt-2 rounded-lg bg-slate-50 p-3 text-sm text-slate-800">
+                      <p className="mt-2 rounded-lg bg-slate-50 p-3 text-sm text-slate-800 dark:bg-slate-800/60 dark:text-slate-200">
                         <span className="font-semibold">Comentário do usuário:</span> {item.comment}
                       </p>
                     )}

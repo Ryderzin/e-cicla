@@ -296,11 +296,11 @@ export default function AdminSuggestionReviewPage() {
           </div>
 
           {load.detail.suggestion.comment && (
-            <div className="mt-5 rounded-xl border border-slate-200 bg-slate-50 p-4">
-              <h2 className="text-sm font-semibold tracking-wide text-slate-600 uppercase">
+            <div className="mt-5 rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900/60">
+              <h2 className="text-sm font-semibold tracking-wide text-slate-600 uppercase dark:text-slate-400">
                 Comentário do usuário
               </h2>
-              <p className="mt-1 text-lg text-slate-900">{load.detail.suggestion.comment}</p>
+              <p className="mt-1 text-lg text-slate-900 dark:text-slate-100">{load.detail.suggestion.comment}</p>
             </div>
           )}
 
@@ -309,24 +309,24 @@ export default function AdminSuggestionReviewPage() {
             <div
               role="region"
               aria-label="Possíveis pontos duplicados"
-              className="mt-5 rounded-xl border border-amber-300 bg-amber-50 p-5 text-slate-900"
+              className="mt-5 rounded-xl border border-amber-300 bg-amber-50 p-5 text-slate-900 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-slate-100"
             >
-              <h2 className="text-lg font-bold text-amber-950">
+              <h2 className="text-lg font-bold text-amber-950 dark:text-amber-200">
                 Atenção: {load.detail.nearbyDuplicates.length === 1 ? 'há 1 ponto já cadastrado' : `há ${load.detail.nearbyDuplicates.length} pontos já cadastrados`} perto deste local
               </h2>
-              <p className="mt-1 text-slate-800">
+              <p className="mt-1 text-slate-800 dark:text-slate-200">
                 Confira se a sugestão não repete um ponto que já está no mapa num raio de 250 metros:
               </p>
               <ul className="mt-3 space-y-2">
                 {load.detail.nearbyDuplicates.map((dup) => (
-                  <li key={dup.id} className="rounded-lg border border-amber-200 bg-white p-3">
+                  <li key={dup.id} className="rounded-lg border border-amber-200 bg-white p-3 dark:border-amber-900/40 dark:bg-slate-900">
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <span className="font-semibold text-slate-900">{dup.name ?? UNNAMED_POINT}</span>
+                      <span className="font-semibold text-slate-900 dark:text-slate-100">{dup.name ?? UNNAMED_POINT}</span>
                       <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-sm font-medium text-amber-950">
                         a {dup.distanceMeters} m
                       </span>
                     </div>
-                    <p className="mt-1 text-sm text-slate-700">
+                    <p className="mt-1 text-sm text-slate-700 dark:text-slate-300">
                       Materiais: {dup.acceptedMaterials.map((m) => MATERIAL_LABELS[m]).join(', ')}
                     </p>
                     <Link to={`/admin/pontos/${dup.id}`} className={`mt-1 inline-block text-sm ${TEXT_LINK}`}>
@@ -339,26 +339,26 @@ export default function AdminSuggestionReviewPage() {
           )}
 
           {load.detail.suggestion.type === 'POINT_UPDATE' && load.detail.targetPoint && (
-            <div className="mt-5 rounded-xl border border-slate-200 bg-slate-50 p-5">
-              <h2 className="text-lg font-bold text-slate-900">Dados atuais do ponto no mapa</h2>
+            <div className="mt-5 rounded-xl border border-slate-200 bg-slate-50 p-5 dark:border-slate-800 dark:bg-slate-900/60">
+              <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">Dados atuais do ponto no mapa</h2>
               <dl className="mt-3 grid gap-3 text-sm sm:grid-cols-2">
                 <div>
-                  <dt className="font-semibold text-slate-600">Nome atual</dt>
-                  <dd className="text-slate-900">{load.detail.targetPoint.name ?? UNNAMED_POINT}</dd>
+                  <dt className="font-semibold text-slate-600 dark:text-slate-400">Nome atual</dt>
+                  <dd className="text-slate-900 dark:text-slate-100">{load.detail.targetPoint.name ?? UNNAMED_POINT}</dd>
                 </div>
                 <div>
-                  <dt className="font-semibold text-slate-600">Endereço atual</dt>
-                  <dd className="text-slate-900">{load.detail.targetPoint.address ?? 'Não informado'}</dd>
+                  <dt className="font-semibold text-slate-600 dark:text-slate-400">Endereço atual</dt>
+                  <dd className="text-slate-900 dark:text-slate-100">{load.detail.targetPoint.address ?? 'Não informado'}</dd>
                 </div>
                 <div>
-                  <dt className="font-semibold text-slate-600">Materiais atuais</dt>
+                  <dt className="font-semibold text-slate-600 dark:text-slate-400">Materiais atuais</dt>
                   <dd className="text-slate-900">
                     {load.detail.targetPoint.acceptedMaterials.map((m) => MATERIAL_LABELS[m]).join(', ')}
                   </dd>
                 </div>
                 <div>
-                  <dt className="font-semibold text-slate-600">Horário atual</dt>
-                  <dd className="text-slate-900">{load.detail.targetPoint.openingHours ?? 'Não informado'}</dd>
+                  <dt className="font-semibold text-slate-600 dark:text-slate-400">Horário atual</dt>
+                  <dd className="text-slate-900 dark:text-slate-100">{load.detail.targetPoint.openingHours ?? 'Não informado'}</dd>
                 </div>
               </dl>
             </div>
@@ -371,12 +371,12 @@ export default function AdminSuggestionReviewPage() {
           )}
 
           {load.detail.suggestion.status !== 'PENDING' ? (
-            <div className="mt-6 rounded-xl border border-slate-200 bg-white p-5">
-              <h2 className="text-xl font-bold text-slate-900">
+            <div className="mt-6 rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
+              <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">
                 Situação: {load.detail.suggestion.status === 'APPROVED' ? 'Aprovada' : 'Não aprovada'}
               </h2>
               {load.detail.suggestion.reviewedAt && (
-                <p className="mt-1 text-slate-700">
+                <p className="mt-1 text-slate-700 dark:text-slate-300">
                   Avaliada em {formatDate(load.detail.suggestion.reviewedAt)}.
                 </p>
               )}
@@ -513,7 +513,7 @@ export default function AdminSuggestionReviewPage() {
                   <div
                     role="region"
                     aria-label="Confirmar aprovação"
-                    className="rounded-xl border border-emerald-300 bg-emerald-50 p-5 text-emerald-950"
+                    className="rounded-xl border border-emerald-300 bg-emerald-50 p-5 text-emerald-950 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-200"
                   >
                     <h3 className="text-lg font-bold">Confirmar aprovação da sugestão?</h3>
                     <p className="mt-1">
@@ -546,7 +546,7 @@ export default function AdminSuggestionReviewPage() {
                   <form
                     onSubmit={confirmReject}
                     noValidate
-                    className="space-y-4 rounded-xl border border-red-200 bg-red-50 p-5 text-red-950"
+                    className="space-y-4 rounded-xl border border-red-200 bg-red-50 p-5 text-red-950 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-200"
                   >
                     <h3 className="text-lg font-bold">Rejeitar sugestão</h3>
                     <p>

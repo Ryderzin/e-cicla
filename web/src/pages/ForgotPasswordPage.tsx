@@ -39,14 +39,14 @@ export default function ForgotPasswordPage() {
       <div className="mx-auto max-w-md">
         <Link
           to="/entrar"
-          className="inline-flex items-center gap-1 font-medium text-slate-700 hover:text-slate-950"
+          className="inline-flex items-center gap-1 font-medium text-slate-700 hover:text-slate-950 dark:text-slate-300 dark:hover:text-slate-100"
         >
           <BackIcon className="size-5" />
           Voltar para o login
         </Link>
 
-        <h1 className="mt-3 text-3xl font-bold text-slate-900">Recuperar senha</h1>
-        <p className="mt-2 text-lg text-slate-700">
+        <h1 className="mt-3 text-3xl font-bold text-slate-900 dark:text-slate-100">Recuperar senha</h1>
+        <p className="mt-2 text-lg text-slate-700 dark:text-slate-300">
           Informe o e-mail cadastrado na sua conta. Vamos enviar um link seguro para você escolher uma nova senha.
         </p>
 
@@ -56,7 +56,7 @@ export default function ForgotPasswordPage() {
               Se houver uma conta cadastrada com este e-mail, enviamos as instruções para a sua caixa de entrada.
               O link é válido por <strong>1 hora</strong>. Verifique também a sua pasta de spam.
             </Notice>
-            <p className="text-slate-700">
+            <p className="text-slate-700 dark:text-slate-300">
               Já recebeu o e-mail ou quer tentar outro endereço?{' '}
               <Link to="/entrar" className={TEXT_LINK}>
                 Voltar para o início de sessão

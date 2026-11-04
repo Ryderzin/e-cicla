@@ -41,7 +41,7 @@ export default function AccountPage() {
   if (status === 'checking') {
     return (
       <div className={PAGE}>
-        <p role="status" className="text-slate-700">
+        <p role="status" className="text-slate-700 dark:text-slate-300">
           Carregando sua conta…
         </p>
       </div>
@@ -109,7 +109,7 @@ export default function AccountPage() {
     <div className={PAGE}>
       <title>Minha conta | E-Cicla</title>
       <div className="mx-auto max-w-xl">
-        <h1 className="text-3xl font-bold text-slate-900">Minha conta</h1>
+        <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">Minha conta</h1>
 
         {savedNotice && (
           <div className="mt-4">
@@ -117,11 +117,11 @@ export default function AccountPage() {
           </div>
         )}
 
-        <dl className="mt-6 space-y-4 rounded-xl border border-slate-200 p-5">
+        <dl className="mt-6 space-y-4 rounded-xl border border-slate-200 p-5 dark:border-slate-800 dark:bg-slate-900/40">
           <div>
-            <dt className="text-sm font-semibold tracking-wide text-slate-600 uppercase">Nome</dt>
+            <dt className="text-sm font-semibold tracking-wide text-slate-600 uppercase dark:text-slate-400">Nome</dt>
             {!editingName ? (
-              <dd className="mt-0.5 flex flex-wrap items-center justify-between gap-2 text-lg text-slate-900">
+              <dd className="mt-0.5 flex flex-wrap items-center justify-between gap-2 text-lg text-slate-900 dark:text-slate-100">
                 <span>{account.name}</span>
                 <button
                   type="button"
@@ -168,12 +168,12 @@ export default function AccountPage() {
             )}
           </div>
           <div>
-            <dt className="text-sm font-semibold tracking-wide text-slate-600 uppercase">E-mail</dt>
-            <dd className="mt-0.5 text-lg text-slate-900">{account.email}</dd>
+            <dt className="text-sm font-semibold tracking-wide text-slate-600 uppercase dark:text-slate-400">E-mail</dt>
+            <dd className="mt-0.5 text-lg text-slate-900 dark:text-slate-100">{account.email}</dd>
           </div>
           <div>
-            <dt className="text-sm font-semibold tracking-wide text-slate-600 uppercase">Colaboração</dt>
-            <dd className="mt-0.5 text-lg text-slate-900">
+            <dt className="text-sm font-semibold tracking-wide text-slate-600 uppercase dark:text-slate-400">Colaboração</dt>
+            <dd className="mt-0.5 text-lg text-slate-900 dark:text-slate-100">
               <Link to="/sugestoes" className={TEXT_LINK}>
                 Ver minhas sugestões de pontos e correções
               </Link>
@@ -181,8 +181,8 @@ export default function AccountPage() {
           </div>
           {account.role === 'ADMIN' && (
             <div>
-              <dt className="text-sm font-semibold tracking-wide text-slate-600 uppercase">Perfil</dt>
-              <dd className="mt-0.5 text-lg text-slate-900">
+              <dt className="text-sm font-semibold tracking-wide text-slate-600 uppercase dark:text-slate-400">Perfil</dt>
+              <dd className="mt-0.5 text-lg text-slate-900 dark:text-slate-100">
                 Administrador.{' '}
                 <Link to="/admin/pontos" className={TEXT_LINK}>
                   Ir para a administração
@@ -196,11 +196,11 @@ export default function AccountPage() {
           Sair da conta
         </button>
 
-        <section aria-labelledby="privacidade-titulo" className="mt-10 border-t border-slate-200 pt-8">
-          <h2 id="privacidade-titulo" className="text-xl font-bold text-slate-900">
+        <section aria-labelledby="privacidade-titulo" className="mt-10 border-t border-slate-200 pt-8 dark:border-slate-800">
+          <h2 id="privacidade-titulo" className="text-xl font-bold text-slate-900 dark:text-slate-100">
             Dados e privacidade
           </h2>
-          <p className="mt-2 text-slate-700">
+          <p className="mt-2 text-slate-700 dark:text-slate-300">
             Veja quais dados o E-Cicla guarda e para quê na{' '}
             <Link to="/privacidade" className={TEXT_LINK}>
               política de privacidade
@@ -213,9 +213,9 @@ export default function AccountPage() {
               Excluir minha conta
             </button>
           ) : (
-            <form onSubmit={confirmDeletion} noValidate className="mt-6 space-y-4 rounded-xl border border-red-200 bg-red-50 p-5">
-              <h3 className="text-lg font-semibold text-red-950">Excluir a conta</h3>
-              <p className="text-red-950">
+            <form onSubmit={confirmDeletion} noValidate className="mt-6 space-y-4 rounded-xl border border-red-200 bg-red-50 p-5 dark:border-red-900/60 dark:bg-red-950/40">
+              <h3 className="text-lg font-semibold text-red-950 dark:text-red-200">Excluir a conta</h3>
+              <p className="text-red-950 dark:text-red-200">
                 Sua conta e seus dados pessoais serão apagados. Isso não pode ser desfeito. Para confirmar, digite sua
                 senha.
               </p>

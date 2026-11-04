@@ -70,8 +70,8 @@ export default function ResetPasswordPage() {
           Voltar para o login
         </Link>
 
-        <h1 className="mt-3 text-3xl font-bold text-slate-900">Criar nova senha</h1>
-        <p className="mt-2 text-lg text-slate-700">
+        <h1 className="mt-3 text-3xl font-bold text-slate-900 dark:text-slate-100">Criar nova senha</h1>
+        <p className="mt-2 text-lg text-slate-700 dark:text-slate-300">
           Escolha uma nova senha forte para acessar sua conta no E-Cicla.
         </p>
 
@@ -80,7 +80,7 @@ export default function ResetPasswordPage() {
             <Notice kind="error">
               Link de redefinição incompleto ou inválido. O link precisa conter o código enviado por e-mail.
             </Notice>
-            <p className="text-slate-700">
+            <p className="text-slate-700 dark:text-slate-300">
               Precisa de um novo link?{' '}
               <Link to="/esqueci-minha-senha" className={TEXT_LINK}>
                 Solicitar recuperação de senha
@@ -93,7 +93,7 @@ export default function ResetPasswordPage() {
               <div className="space-y-2">
                 <Notice kind="error">{error}</Notice>
                 {error.includes('expirou') && (
-                  <p className="text-sm text-slate-700">
+                  <p className="text-sm text-slate-700 dark:text-slate-300">
                     <Link to="/esqueci-minha-senha" className={TEXT_LINK}>
                       Clique aqui para solicitar um novo link de recuperação.
                     </Link>

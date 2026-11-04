@@ -71,19 +71,19 @@ export default function PointDetailsPanel({ point, onClose }: PointDetailsPanelP
   return (
     <aside
       aria-labelledby="detalhes-titulo"
-      className="absolute inset-x-0 bottom-0 z-[1100] max-h-[65%] overflow-y-auto rounded-t-2xl bg-white shadow-[0_-8px_24px_rgba(15,23,42,0.18)] md:inset-y-0 md:right-0 md:left-auto md:max-h-none md:w-96 md:rounded-none md:border-l md:border-slate-200 md:shadow-xl"
+      className="absolute inset-x-0 bottom-0 z-[1100] max-h-[65%] overflow-y-auto rounded-t-2xl bg-white shadow-[0_-8px_24px_rgba(15,23,42,0.18)] md:inset-y-0 md:right-0 md:left-auto md:max-h-none md:w-96 md:rounded-none md:border-l md:border-slate-200 md:shadow-xl dark:border-slate-800 dark:bg-slate-900"
     >
-      <div className="sticky top-0 z-10 border-b border-slate-200 bg-white px-4 pt-2 pb-3">
-        <div className="mx-auto mb-2 h-1.5 w-10 rounded-full bg-slate-300 md:hidden" aria-hidden="true" />
+      <div className="sticky top-0 z-10 border-b border-slate-200 bg-white px-4 pt-2 pb-3 dark:border-slate-800 dark:bg-slate-900">
+        <div className="mx-auto mb-2 h-1.5 w-10 rounded-full bg-slate-300 dark:bg-slate-700 md:hidden" aria-hidden="true" />
         <div className="flex items-start justify-between gap-3">
-          <h2 id="detalhes-titulo" ref={headingRef} tabIndex={-1} className="pt-1 text-xl font-bold text-slate-900">
+          <h2 id="detalhes-titulo" ref={headingRef} tabIndex={-1} className="pt-1 text-xl font-bold text-slate-900 dark:text-slate-100">
             {name}
           </h2>
           <button
             type="button"
             onClick={onClose}
             aria-label="Fechar detalhes"
-            className="shrink-0 rounded-md p-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+            className="shrink-0 rounded-md p-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
           >
             <CloseIcon />
           </button>
@@ -92,12 +92,12 @@ export default function PointDetailsPanel({ point, onClose }: PointDetailsPanelP
 
       <div className="space-y-5 px-4 py-4">
         <section aria-labelledby="materiais-titulo">
-          <h3 id="materiais-titulo" className="text-sm font-semibold tracking-wide text-slate-600 uppercase">
+          <h3 id="materiais-titulo" className="text-sm font-semibold tracking-wide text-slate-600 uppercase dark:text-slate-400">
             Materiais aceitos
           </h3>
           <ul className="mt-2 flex flex-wrap gap-2">
             {point.acceptedMaterials.map((material) => (
-              <li key={material} className="rounded-full bg-emerald-100 px-3 py-1 text-sm font-medium text-emerald-900">
+              <li key={material} className="rounded-full bg-emerald-100 px-3 py-1 text-sm font-medium text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200">
                 {MATERIAL_LABELS[material]}
               </li>
             ))}
@@ -105,7 +105,7 @@ export default function PointDetailsPanel({ point, onClose }: PointDetailsPanelP
         </section>
 
         {state.status === 'loading' && (
-          <p role="status" className="text-slate-600">
+          <p role="status" className="text-slate-600 dark:text-slate-400">
             Carregando detalhes…
           </p>
         )}
@@ -133,7 +133,7 @@ export default function PointDetailsPanel({ point, onClose }: PointDetailsPanelP
             href={directionsUrl(point.latitude, point.longitude)}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-700 px-4 py-3 font-semibold text-white shadow-sm hover:bg-emerald-800"
+            className="flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-700 px-4 py-3 font-semibold text-white shadow-sm hover:bg-emerald-800 dark:bg-emerald-600 dark:hover:bg-emerald-700"
           >
             <RouteIcon className="size-5" />
             Como chegar
@@ -149,9 +149,9 @@ export default function PointDetailsPanel({ point, onClose }: PointDetailsPanelP
           </Link>
         </div>
 
-        <div className="space-y-1.5 text-sm text-slate-600">
+        <div className="space-y-1.5 text-sm text-slate-600 dark:text-slate-400">
           {state.status === 'success' && state.details.verifiedAt && (
-            <p className="font-medium text-emerald-900">
+            <p className="font-medium text-emerald-900 dark:text-emerald-400">
               Verificado pela equipe em {formatDate(state.details.verifiedAt)}.
             </p>
           )}
@@ -181,32 +181,32 @@ function DetailsList({ details }: { details: PointDetails }) {
   return (
     <dl className="space-y-4">
       <div>
-        <dt className="text-sm font-semibold tracking-wide text-slate-600 uppercase">Endereço</dt>
-        <dd className="mt-1 text-slate-900">
+        <dt className="text-sm font-semibold tracking-wide text-slate-600 uppercase dark:text-slate-400">Endereço</dt>
+        <dd className="mt-1 text-slate-900 dark:text-slate-100">
           {details.address ?? 'Não informado'}
           {details.address && details.addressApproximate && (
-            <span className="mt-1 block text-sm text-slate-600">
+            <span className="mt-1 block text-sm text-slate-600 dark:text-slate-400">
               Endereço aproximado, calculado pela localização do ponto no mapa.
             </span>
           )}
         </dd>
       </div>
       <div>
-        <dt className="text-sm font-semibold tracking-wide text-slate-600 uppercase">Horário de funcionamento</dt>
-        <dd className="mt-1 text-slate-900">
+        <dt className="text-sm font-semibold tracking-wide text-slate-600 uppercase dark:text-slate-400">Horário de funcionamento</dt>
+        <dd className="mt-1 text-slate-900 dark:text-slate-100">
           <OpeningHours value={details.openingHours} />
         </dd>
       </div>
       {details.operator && (
         <div>
-          <dt className="text-sm font-semibold tracking-wide text-slate-600 uppercase">Responsável</dt>
-          <dd className="mt-1 text-slate-900">{details.operator}</dd>
+          <dt className="text-sm font-semibold tracking-wide text-slate-600 uppercase dark:text-slate-400">Responsável</dt>
+          <dd className="mt-1 text-slate-900 dark:text-slate-100">{details.operator}</dd>
         </div>
       )}
       {details.notes && (
         <div>
-          <dt className="text-sm font-semibold tracking-wide text-slate-600 uppercase">Observações</dt>
-          <dd className="mt-1 whitespace-pre-line text-slate-900">{details.notes}</dd>
+          <dt className="text-sm font-semibold tracking-wide text-slate-600 uppercase dark:text-slate-400">Observações</dt>
+          <dd className="mt-1 whitespace-pre-line text-slate-900 dark:text-slate-100">{details.notes}</dd>
         </div>
       )}
     </dl>

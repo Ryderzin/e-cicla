@@ -27,7 +27,7 @@ function Pin({ x, y, color = '#047857', size = 30 }: { x: number; y: number; col
 export default function HeroIllustration({ className = '' }: { className?: string }) {
   return (
     <div aria-hidden="true" className={`relative ${className}`}>
-      <div className="relative aspect-[5/4] overflow-hidden rounded-3xl bg-white shadow-xl ring-1 ring-emerald-100">
+      <div className="relative aspect-[5/4] overflow-hidden rounded-3xl bg-white shadow-xl ring-1 ring-emerald-100 dark:bg-slate-900 dark:ring-emerald-900/40">
         <svg viewBox="0 0 400 320" className="absolute inset-0 size-full" preserveAspectRatio="xMidYMid slice">
           <rect width="400" height="320" fill="#f1f5f9" />
           {/* Parks and a river */}
@@ -74,14 +74,14 @@ export default function HeroIllustration({ className = '' }: { className?: strin
       </div>
 
       {/* Card like the point details, floating over the map */}
-      <div className="absolute -bottom-6 -left-6 w-56 rounded-2xl bg-white p-4 shadow-xl ring-1 ring-slate-200 motion-safe:transition-transform motion-safe:hover:-translate-y-1">
+      <div className="absolute -bottom-6 -left-6 w-56 rounded-2xl bg-white p-4 shadow-xl ring-1 ring-slate-200 motion-safe:transition-transform motion-safe:hover:-translate-y-1 dark:bg-slate-900 dark:ring-slate-800">
         <p className="flex items-baseline justify-between gap-2">
-          <span className="font-bold text-slate-900">Ponto de coleta</span>
-          <span className="text-sm font-medium text-slate-600">1,2 km</span>
+          <span className="font-bold text-slate-900 dark:text-slate-100">Ponto de coleta</span>
+          <span className="text-sm font-medium text-slate-600 dark:text-slate-400">1,2 km</span>
         </p>
         <p className="mt-2 flex flex-wrap gap-1.5">
-          <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-900">Celulares</span>
-          <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-900">
+          <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200">Celulares</span>
+          <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200">
             Pilhas e baterias
           </span>
         </p>
