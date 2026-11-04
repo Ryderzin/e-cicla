@@ -519,7 +519,7 @@ export default function AdminSuggestionReviewPage() {
                     <p className="mt-1">
                       {load.detail.suggestion.type === 'NEW_POINT'
                         ? 'Um novo ponto de coleta ativo será criado no mapa com os dados acima e marcado como verificado pela equipe.'
-                        : 'O ponto de coleta existente será atualizado no mapa com os dados acima e a nova data de verificação.'}
+                        : 'O ponto de coleta existente será atualizado no mapa com os dados acima e a nova data de atualização.'}
                     </p>
                     <div className="mt-4 flex flex-wrap gap-3">
                       <button

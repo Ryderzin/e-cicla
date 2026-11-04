@@ -5,6 +5,7 @@
 export interface OpeningHoursRow {
   days: string
   hours: string
+  isToday?: boolean
 }
 
 const DAY_ORDER = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'] as const
@@ -21,13 +22,23 @@ const DAY_NAMES: Record<Day | 'PH', string> = {
   PH: 'feriados',
 }
 
+const JS_DAY_MAP: Record<number, Day> = {
+  0: 'Su',
+  1: 'Mo',
+  2: 'Tu',
+  3: 'We',
+  4: 'Th',
+  5: 'Fr',
+  6: 'Sa',
+}
+
 const DAY_SELECTOR = /^(Mo|Tu|We|Th|Fr|Sa|Su|PH)(-(Mo|Tu|We|Th|Fr|Sa|Su))?(,(Mo|Tu|We|Th|Fr|Sa|Su|PH)(-(Mo|Tu|We|Th|Fr|Sa|Su))?)*$/
 const TIME_RANGE = /^(\d{1,2}):(\d{2})-(\d{1,2}):(\d{2})$/
 
 export function parseOpeningHours(value: string): OpeningHoursRow[] | null {
   const text = value.trim()
   if (text === '24/7') {
-    return [{ days: 'Todos os dias', hours: '24 horas' }]
+    return [{ days: 'Todos os dias', hours: '24 horas', isToday: true }]
   }
 
   // Rules are separated by ";", or by "," right after a time ("Mo-Fr 08:00-17:00,Sa 08:00-12:00").
@@ -62,7 +73,46 @@ function parseRule(rule: string): OpeningHoursRow | null {
   if (days === null || hours === null) {
     return null
   }
-  return { days, hours }
+  const isToday = checkIsToday(selector)
+  return { days, hours, isToday }
+}
+
+function checkIsToday(selector: string | null): boolean {
+  if (typeof window === 'undefined') {
+    return false
+  }
+  if (!selector) {
+    return true
+  }
+  const todayDay = JS_DAY_MAP[new Date().getDay()]
+  const parts = selector.split(',')
+  for (const part of parts) {
+    const [from, to] = part.split('-') as [Day | 'PH', Day | undefined]
+    if (from === 'PH') {
+      continue
+    }
+    if (!to) {
+      if (from === todayDay) {
+        return true
+      }
+    } else {
+      const fromIdx = DAY_ORDER.indexOf(from as Day)
+      const toIdx = DAY_ORDER.indexOf(to)
+      const todayIdx = DAY_ORDER.indexOf(todayDay)
+      if (fromIdx !== -1 && toIdx !== -1 && todayIdx !== -1) {
+        if (fromIdx <= toIdx) {
+          if (todayIdx >= fromIdx && todayIdx <= toIdx) {
+            return true
+          }
+        } else {
+          if (todayIdx >= fromIdx || todayIdx <= toIdx) {
+            return true
+          }
+        }
+      }
+    }
+  }
+  return false
 }
 
 function formatDays(selector: string): string | null {

@@ -5,7 +5,7 @@ import { fetchPoint, type PointDetails, type PointSummary } from '../api/points.
 import { directionsUrl } from '../lib/directions.ts'
 import { MATERIAL_LABELS, UNNAMED_POINT } from '../lib/materials.ts'
 import { parseOpeningHours } from '../lib/openingHours.ts'
-import { SECONDARY_BUTTON } from '../lib/ui.ts'
+import { SECONDARY_BUTTON, TEXT_LINK } from '../lib/ui.ts'
 import { CloseIcon, EditIcon, RouteIcon } from './icons.tsx'
 
 type DetailsState = { status: 'loading' } | { status: 'error' } | { status: 'success'; details: PointDetails }
@@ -126,7 +126,7 @@ export default function PointDetailsPanel({ point, onClose }: PointDetailsPanelP
           </div>
         )}
 
-        {state.status === 'success' && <DetailsList details={state.details} />}
+        {state.status === 'success' && <DetailsList details={state.details} pointId={point.id} />}
 
         <div className="space-y-2.5">
           <a
@@ -152,7 +152,7 @@ export default function PointDetailsPanel({ point, onClose }: PointDetailsPanelP
         <div className="space-y-1.5 text-sm text-slate-600 dark:text-slate-400">
           {state.status === 'success' && state.details.verifiedAt && (
             <p className="font-medium text-emerald-900 dark:text-emerald-400">
-              Verificado pela equipe em {formatDate(state.details.verifiedAt)}.
+              Atualizado pela equipe em {formatDate(state.details.verifiedAt)}.
             </p>
           )}
           <p>
@@ -177,7 +177,7 @@ export default function PointDetailsPanel({ point, onClose }: PointDetailsPanelP
   )
 }
 
-function DetailsList({ details }: { details: PointDetails }) {
+function DetailsList({ details, pointId }: { details: PointDetails; pointId: string }) {
   return (
     <dl className="space-y-4">
       <div>
@@ -194,7 +194,7 @@ function DetailsList({ details }: { details: PointDetails }) {
       <div>
         <dt className="text-sm font-semibold tracking-wide text-slate-600 uppercase dark:text-slate-400">Horário de funcionamento</dt>
         <dd className="mt-1 text-slate-900 dark:text-slate-100">
-          <OpeningHours value={details.openingHours} />
+          <OpeningHours value={details.openingHours} pointId={pointId} />
         </dd>
       </div>
       {details.operator && (
@@ -213,19 +213,38 @@ function DetailsList({ details }: { details: PointDetails }) {
   )
 }
 
-function OpeningHours({ value }: { value: string | null }) {
+function OpeningHours({ value, pointId }: { value: string | null; pointId: string }) {
   if (!value) {
-    return <>Não informado</>
+    return (
+      <span className="text-slate-600 dark:text-slate-400">
+        Horário não informado. Se você souber,{' '}
+        <Link to={`/sugestoes/nova?ponto=${encodeURIComponent(pointId)}`} className={TEXT_LINK}>
+          sugira uma correção
+        </Link>
+        .
+      </span>
+    )
   }
   const rows = parseOpeningHours(value)
   if (!rows) {
-    return <>{value}</>
+    return <span className="text-slate-900 dark:text-slate-100">{value}</span>
   }
   return (
     <ul className="space-y-1">
       {rows.map((row, index) => (
-        <li key={index}>
-          <span className="font-medium">{row.days}:</span> {row.hours}
+        <li
+          key={index}
+          className={`flex flex-wrap items-center gap-1.5 ${
+            row.isToday ? 'font-semibold text-emerald-900 dark:text-emerald-300' : 'text-slate-900 dark:text-slate-100'
+          }`}
+        >
+          <span>{row.days}:</span>
+          <span>{row.hours}</span>
+          {row.isToday && (
+            <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200">
+              hoje
+            </span>
+          )}
         </li>
       ))}
     </ul>
