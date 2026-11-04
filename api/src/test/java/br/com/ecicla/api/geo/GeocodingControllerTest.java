@@ -89,4 +89,21 @@ class GeocodingControllerTest {
         mvc.perform(get("/api/geocode").param("q", "muitas buscas")).andExpect(status().isServiceUnavailable());
         mvc.perform(get("/api/geocode").param("q", "fora do ar")).andExpect(status().isBadGateway());
     }
+
+    @Test
+    void retriesWithoutAccentsWhenFirstSearchReturnsEmpty() throws Exception {
+        when(nominatim.search(eq("Rua Maurício Galli, Araraquara"), any(), any()))
+                .thenReturn(Optional.empty());
+        when(nominatim.search(eq("Rua Mauricio Galli, Araraquara"), any(), any()))
+                .thenReturn(Optional.of(new Place(-21.78, -48.17, "Rua Mauricio Galli, Araraquara - SP")));
+
+        mvc.perform(get("/api/geocode").param("q", "Rua Maurício Galli, Araraquara"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.latitude").value(-21.78))
+                .andExpect(jsonPath("$.longitude").value(-48.17))
+                .andExpect(jsonPath("$.label").value("Rua Mauricio Galli, Araraquara - SP"));
+
+        verify(nominatim).search(eq("Rua Maurício Galli, Araraquara"), any(), any());
+        verify(nominatim).search(eq("Rua Mauricio Galli, Araraquara"), any(), any());
+    }
 }

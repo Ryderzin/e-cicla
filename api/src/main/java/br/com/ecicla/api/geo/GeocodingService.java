@@ -48,16 +48,27 @@ public class GeocodingService {
                 return cached;
             }
         }
-        Optional<Place> place = nominatim.search(query.trim(), area, MAX_WAIT);
+        String trimmed = query.trim();
+        Optional<Place> place = nominatim.search(trimmed, area, MAX_WAIT);
+        if (place.isEmpty()) {
+            String withoutAccents = removeAccents(trimmed);
+            if (!withoutAccents.equalsIgnoreCase(trimmed)) {
+                place = nominatim.search(withoutAccents, area, MAX_WAIT);
+            }
+        }
         synchronized (cache) {
             cache.put(key, place);
         }
         return place;
     }
 
+    static String removeAccents(String text) {
+        return Normalizer.normalize(text, Normalizer.Form.NFD).replaceAll("\\p{M}", "");
+    }
+
     /** "Av. Águia de  Haia" and "av. aguia de haia" are the same search. */
     static String normalize(String query) {
-        String withoutAccents = Normalizer.normalize(query, Normalizer.Form.NFD).replaceAll("\\p{M}", "");
+        String withoutAccents = removeAccents(query);
         return withoutAccents.toLowerCase(Locale.ROOT).replaceAll("\\s+", " ").trim();
     }
 }
