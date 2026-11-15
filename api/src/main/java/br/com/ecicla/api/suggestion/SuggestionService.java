@@ -9,6 +9,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.bson.types.ObjectId;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
@@ -42,14 +43,17 @@ public class SuggestionService {
     private final SuggestionRepository suggestions;
     private final CollectionPointRepository points;
     private final UserRepository users;
+    private final ApplicationEventPublisher events;
 
     public SuggestionService(
             SuggestionRepository suggestions,
             CollectionPointRepository points,
-            UserRepository users) {
+            UserRepository users,
+            ApplicationEventPublisher events) {
         this.suggestions = suggestions;
         this.points = points;
         this.users = users;
+        this.events = events;
     }
 
     public List<SuggestionView> listMine(Authenticated authenticated) {
@@ -200,6 +204,8 @@ public class SuggestionService {
                     new SuggestionReview(admin.user().id(), now, cleanReason),
                     stored.createdAt(),
                     now));
+            events.publishEvent(new SuggestionReviewedEvent(approved.id(), approved.userId(), approved.type(), true,
+                    savedPoint.name(), cleanReason));
             return SuggestionView.from(approved, savedPoint.name());
         });
     }
@@ -223,6 +229,9 @@ public class SuggestionService {
                     new SuggestionReview(admin.user().id(), now, cleanReason),
                     stored.createdAt(),
                     now));
+            String pointName = stored.proposed() == null ? null : stored.proposed().name();
+            events.publishEvent(new SuggestionReviewedEvent(rejected.id(), rejected.userId(), rejected.type(), false,
+                    pointName, cleanReason));
             return toView(rejected);
         });
     }

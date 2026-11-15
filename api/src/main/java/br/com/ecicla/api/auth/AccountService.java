@@ -8,6 +8,7 @@ import java.util.Locale;
 import java.util.regex.Pattern;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -34,6 +35,7 @@ public class AccountService {
     private final PasswordHasher hasher;
     private final SessionService sessions;
     private final EmailService emailService;
+    private final ApplicationEventPublisher events;
     private final String frontendUrl;
     private final String dummyHash;
     private final SecureRandom random = new SecureRandom();
@@ -43,11 +45,13 @@ public class AccountService {
             PasswordHasher hasher,
             SessionService sessions,
             EmailService emailService,
+            ApplicationEventPublisher events,
             @Value("${app.frontend.url:http://localhost:5173}") String frontendUrl) {
         this.users = users;
         this.hasher = hasher;
         this.sessions = sessions;
         this.emailService = emailService;
+        this.events = events;
         this.frontendUrl = frontendUrl.replaceAll("/+$", "");
         this.dummyHash = hasher.dummyHash();
     }
@@ -190,6 +194,8 @@ public class AccountService {
         }
         sessions.revokeAll(user.id());
         users.deleteById(user.id());
+        // Devices, disposals and notices of the account are deleted by their modules.
+        events.publishEvent(new AccountDeletedEvent(user.id()));
     }
 
     static String normalizeEmail(String email) {

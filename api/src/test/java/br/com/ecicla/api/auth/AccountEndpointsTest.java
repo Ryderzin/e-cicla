@@ -26,11 +26,17 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.event.ApplicationEvents;
+import org.springframework.test.context.event.RecordApplicationEvents;
 import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest({AuthController.class, AccountController.class})
 @Import({AccountService.class, PasswordHasher.class})
+@RecordApplicationEvents
 class AccountEndpointsTest {
+
+    @Autowired
+    private ApplicationEvents events;
 
     private static final String ORIGIN = "http://localhost:5173";
 
@@ -234,6 +240,8 @@ class AccountEndpointsTest {
                 .andExpect(status().isNoContent());
         verify(sessions).revokeAll("u1");
         verify(users).deleteById("u1");
+        // Devices, disposals and notices of the account are deleted by their modules (PB23).
+        assertThat(events.stream(AccountDeletedEvent.class)).containsExactly(new AccountDeletedEvent("u1"));
     }
 
     @Test

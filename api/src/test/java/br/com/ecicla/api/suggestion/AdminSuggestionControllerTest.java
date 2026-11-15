@@ -44,7 +44,11 @@ import br.com.ecicla.api.point.SourceType;
 
 @WebMvcTest(AdminSuggestionController.class)
 @Import(SuggestionService.class)
+@org.springframework.test.context.event.RecordApplicationEvents
 class AdminSuggestionControllerTest {
+
+    @Autowired
+    private org.springframework.test.context.event.ApplicationEvents events;
 
     private static final String USER_ID = "66fb1c2e8f1b2a3c4d5e6f01";
     private static final String ADMIN_ID = "66fb1c2e8f1b2a3c4d5e6f02";
@@ -159,6 +163,13 @@ class AdminSuggestionControllerTest {
         assertThat(savedPoint.getValue().source().externalId()).isEqualTo("suggestion/" + SUGGESTION_ID);
         assertThat(savedPoint.getValue().status()).isEqualTo(PointStatus.ACTIVE);
         assertThat(savedPoint.getValue().adminEditedAt()).isNotNull();
+        // The author is told (PB19).
+        assertThat(events.stream(SuggestionReviewedEvent.class))
+                .singleElement()
+                .satisfies(e -> {
+                    assertThat(e.userId()).isEqualTo(USER_ID);
+                    assertThat(e.approved()).isTrue();
+                });
     }
 
     @Test
@@ -204,5 +215,11 @@ class AdminSuggestionControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("REJECTED"))
                 .andExpect(jsonPath("$.reviewReason").value("Já existe um ponto cadastrado neste endereço."));
+        assertThat(events.stream(SuggestionReviewedEvent.class))
+                .singleElement()
+                .satisfies(e -> {
+                    assertThat(e.approved()).isFalse();
+                    assertThat(e.reason()).isEqualTo("Já existe um ponto cadastrado neste endereço.");
+                });
     }
 }

@@ -12,7 +12,9 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class AuthWebConfig implements WebMvcConfigurer {
 
     static final String[] SIGNED_IN = {
-            "/api/me", "/api/me/**", "/api/auth/logout", "/api/suggestions", "/api/suggestions/**", "/api/admin/**"
+            "/api/me", "/api/me/**", "/api/auth/logout", "/api/suggestions", "/api/suggestions/**", "/api/admin/**",
+            "/api/devices", "/api/devices/**", "/api/disposals", "/api/disposals/**", "/api/notifications",
+            "/api/notifications/**"
     };
     static final String[] ADMIN = {"/api/admin/**"};
 

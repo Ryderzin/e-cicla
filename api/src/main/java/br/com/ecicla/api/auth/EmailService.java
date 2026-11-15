@@ -16,11 +16,17 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+import org.springframework.web.util.HtmlUtils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.mail.internet.MimeMessage;
 
+/**
+ * Transactional e-mails: password recovery and notices (PB19). Sends through the Brevo HTTPS API when its
+ * key is set (the free Render plan blocks SMTP ports), otherwise through SMTP when configured, otherwise
+ * only logs. A failure is logged and never thrown to the caller.
+ */
 @Service
 public class EmailService {
 
@@ -71,46 +77,81 @@ public class EmailService {
                   </p>
                 </div>
                 """.formatted(greeting, resetUrl);
+        if (!send(toEmail, userName, "Redefinição de senha — E-Cicla", html, "redefinição de senha")) {
+            log.warn("Link para contingência: {}", resetUrl);
+        }
+    }
 
+    /** A notice by e-mail (PB19), with a button to the page of the site it talks about. */
+    public void sendNotification(String toEmail, String userName, String title, String message, String url) {
+        String greeting = userName != null && !userName.isBlank() ? "Olá, " + userName + "!" : "Olá!";
+        String html = """
+                <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 580px; margin: 0 auto; padding: 28px 20px; color: #1e293b; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px;">
+                  <div style="margin-bottom: 24px;">
+                    <span style="font-size: 22px; font-weight: bold; color: #047857;">E-Cicla</span>
+                  </div>
+                  <h2 style="font-size: 20px; color: #0f172a; margin-top: 0;">%s</h2>
+                  <p style="font-size: 15px; line-height: 1.6; color: #334155;">%s</p>
+                  <p style="font-size: 15px; line-height: 1.6; color: #334155;">%s</p>
+                  <div style="margin: 30px 0; text-align: center;">
+                    <a href="%s" style="background-color: #047857; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-size: 15px; font-weight: 600; display: inline-block;">Abrir no E-Cicla</a>
+                  </div>
+                  <p style="font-size: 13px; line-height: 1.5; color: #64748b;">
+                    Você recebe este e-mail porque escolheu receber avisos por e-mail. Para parar, desmarque a opção em "Minha conta", no site.
+                  </p>
+                  <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 28px 0;" />
+                  <p style="font-size: 12px; color: #94a3b8; text-align: center; margin: 0;">
+                    E-Cicla — Descarte consciente de lixo eletrônico.
+                  </p>
+                </div>
+                """.formatted(HtmlUtils.htmlEscape(title), HtmlUtils.htmlEscape(greeting),
+                HtmlUtils.htmlEscape(message), url);
+        send(toEmail, userName, title + " — E-Cicla", html, "aviso");
+    }
+
+    /** True when the message left (or would leave, with no provider configured, in development). */
+    private boolean send(String toEmail, String userName, String subject, String html, String kind) {
         // 1. Prioriza o envio via API REST HTTPS (porta 443), compatível com o plano gratuito do Render
         if (!brevoApiKey.isBlank()) {
             try {
-                sendViaBrevoApi(toEmail, userName, html);
-                return;
+                sendViaBrevoApi(toEmail, userName, subject, html);
+                log.info("E-mail de {} enviado com sucesso via API HTTPS (Brevo) para {}", kind, toEmail);
+                return true;
             } catch (Exception e) {
-                log.error("Falha ao enviar e-mail via API Brevo para {}: {}", toEmail, e.getMessage(), e);
-                log.warn("Link para contingência: {}", resetUrl);
-                return;
+                log.error("Falha ao enviar e-mail de {} via API Brevo para {}: {}", kind, toEmail, e.getMessage(), e);
+                return false;
             }
         }
 
         // 2. Fallback para SMTP padrão caso configurado (em planos pagos do Render ou servidores com porta 587 liberada)
         JavaMailSender mailSender = mailSenderProvider.getIfAvailable();
         if (mailSender == null) {
-            log.info("Simulação de envio de e-mail (nenhum provedor SMTP ou API configurado). Para: {}, Link: {}", toEmail, resetUrl);
-            return;
+            log.info("Simulação de envio de e-mail de {} (nenhum provedor SMTP ou API configurado). Para: {}", kind,
+                    toEmail);
+            return false;
         }
-
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, "UTF-8");
             helper.setFrom(fromAddress, "E-Cicla");
             helper.setTo(toEmail);
-            helper.setSubject("Redefinição de senha — E-Cicla");
+            helper.setSubject(subject);
             helper.setText(html, true);
             mailSender.send(message);
-            log.info("E-mail de redefinição de senha enviado com sucesso via SMTP para {}", toEmail);
+            log.info("E-mail de {} enviado com sucesso via SMTP para {}", kind, toEmail);
+            return true;
         } catch (Exception e) {
-            log.error("Falha ao enviar e-mail via SMTP para {}: {}", toEmail, e.getMessage(), e);
-            log.warn("Link para contingência: {}", resetUrl);
+            log.error("Falha ao enviar e-mail de {} via SMTP para {}: {}", kind, toEmail, e.getMessage(), e);
+            return false;
         }
     }
 
-    private void sendViaBrevoApi(String toEmail, String userName, String htmlContent) throws Exception {
+    private void sendViaBrevoApi(String toEmail, String userName, String subject, String htmlContent)
+            throws Exception {
         Map<String, Object> payload = Map.of(
                 "sender", Map.of("name", "E-Cicla", "email", fromAddress),
                 "to", List.of(Map.of("email", toEmail, "name", userName != null ? userName : toEmail)),
-                "subject", "Redefinição de senha — E-Cicla",
+                "subject", subject,
                 "htmlContent", htmlContent
         );
 
@@ -125,9 +166,7 @@ public class EmailService {
                 .build();
 
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
-        if (response.statusCode() >= 200 && response.statusCode() < 300) {
-            log.info("E-mail de redefinição de senha enviado com sucesso via API HTTPS (Brevo) para {}", toEmail);
-        } else {
+        if (response.statusCode() < 200 || response.statusCode() >= 300) {
             throw new IllegalStateException("Brevo API retornou status " + response.statusCode() + ": " + response.body());
         }
     }
