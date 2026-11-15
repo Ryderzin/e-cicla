@@ -165,10 +165,15 @@ export default function AdminPointsPage() {
           <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">Pontos de coleta</h1>
           <p className="mt-1 text-lg text-slate-700 dark:text-slate-300">Cadastre, corrija, desative ou exclua os pontos que aparecem no mapa.</p>
         </div>
-        <Link to="/admin/pontos/novo" className={PRIMARY_BUTTON}>
-          <PlusIcon className="size-5" />
-          Cadastrar ponto
-        </Link>
+        <div className="flex flex-wrap gap-3">
+          <Link to="/admin/relatorio" className={SECONDARY_BUTTON}>
+            Ver relatório
+          </Link>
+          <Link to="/admin/pontos/novo" className={PRIMARY_BUTTON}>
+            <PlusIcon className="size-5" />
+            Cadastrar ponto
+          </Link>
+        </div>
       </div>
 
       <div className="mt-6 space-y-3">

@@ -5,6 +5,7 @@ import { NAME_MAX, NAME_MIN } from '../api/account.ts'
 import { isApiError } from '../api/client.ts'
 import { useAuth } from '../auth/useAuth.ts'
 import { Notice, TextField } from '../components/forms.tsx'
+import NoticePreferencesSection from '../components/NoticePreferencesSection.tsx'
 import { loginPath } from '../lib/navigation.ts'
 import { DANGER_BUTTON, PAGE, PRIMARY_BUTTON, SECONDARY_BUTTON, TEXT_LINK } from '../lib/ui.ts'
 
@@ -195,6 +196,8 @@ export default function AccountPage() {
         <button type="button" onClick={signOut} className={`${SECONDARY_BUTTON} mt-6`}>
           Sair da conta
         </button>
+
+        <NoticePreferencesSection />
 
         <section aria-labelledby="privacidade-titulo" className="mt-10 border-t border-slate-200 pt-8 dark:border-slate-800">
           <h2 id="privacidade-titulo" className="text-xl font-bold text-slate-900 dark:text-slate-100">

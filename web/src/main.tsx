@@ -9,15 +9,21 @@ import AuthProvider from './auth/AuthProvider.tsx'
 import Layout from './components/Layout.tsx'
 import RequireAdmin from './components/RequireAdmin.tsx'
 import AccountPage from './pages/AccountPage.tsx'
+import AdminChartPage from './pages/AdminChartPage.tsx'
 import AdminPointFormPage from './pages/AdminPointFormPage.tsx'
 import AdminPointsPage from './pages/AdminPointsPage.tsx'
+import AdminReportPage from './pages/AdminReportPage.tsx'
 import AdminSuggestionReviewPage from './pages/AdminSuggestionReviewPage.tsx'
 import AdminSuggestionsPage from './pages/AdminSuggestionsPage.tsx'
+import DeviceFormPage from './pages/DeviceFormPage.tsx'
+import DevicesPage from './pages/DevicesPage.tsx'
+import DisposalsPage from './pages/DisposalsPage.tsx'
 import ForgotPasswordPage from './pages/ForgotPasswordPage.tsx'
 import HomePage from './pages/HomePage.tsx'
 import LoginPage from './pages/LoginPage.tsx'
 import MapPage from './pages/MapPage.tsx'
 import NotFoundPage from './pages/NotFoundPage.tsx'
+import NotificationsPage from './pages/NotificationsPage.tsx'
 import PrivacyPage from './pages/PrivacyPage.tsx'
 import RegisterPage from './pages/RegisterPage.tsx'
 import ResetPasswordPage from './pages/ResetPasswordPage.tsx'
@@ -40,6 +46,11 @@ const router = createBrowserRouter([
       { path: 'criar-conta', element: <RegisterPage /> },
       { path: 'conta', element: <AccountPage /> },
       { path: 'privacidade', element: <PrivacyPage /> },
+      { path: 'meus-aparelhos', element: <DevicesPage /> },
+      { path: 'meus-aparelhos/novo', element: <DeviceFormPage /> },
+      { path: 'meus-aparelhos/:id/editar', element: <DeviceFormPage key="editar" /> },
+      { path: 'meus-descartes', element: <DisposalsPage /> },
+      { path: 'avisos', element: <NotificationsPage /> },
       {
         path: 'admin/pontos',
         element: (
@@ -77,6 +88,22 @@ const router = createBrowserRouter([
         element: (
           <RequireAdmin>
             <AdminSuggestionReviewPage />
+          </RequireAdmin>
+        ),
+      },
+      {
+        path: 'admin/relatorio',
+        element: (
+          <RequireAdmin>
+            <AdminReportPage />
+          </RequireAdmin>
+        ),
+      },
+      {
+        path: 'admin/grafico',
+        element: (
+          <RequireAdmin>
+            <AdminChartPage />
           </RequireAdmin>
         ),
       },

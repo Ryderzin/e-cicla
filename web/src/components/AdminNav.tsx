@@ -22,6 +22,16 @@ export default function AdminNav() {
             Sugestões
           </NavLink>
         </li>
+        <li>
+          <NavLink to="/admin/relatorio" className={tabClass}>
+            Relatório
+          </NavLink>
+        </li>
+        <li>
+          <NavLink to="/admin/grafico" className={tabClass}>
+            Gráfico de descartes
+          </NavLink>
+        </li>
       </ul>
     </nav>
   )

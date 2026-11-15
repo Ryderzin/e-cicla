@@ -1,5 +1,5 @@
 import { type ReactNode, useCallback, useEffect, useMemo, useState } from 'react'
-import { useLocation, useNavigate } from 'react-router'
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router'
 
 import { fetchPoints, type PointSummary } from '../api/points.ts'
 import NearbySearch, { type NearbyResults } from '../components/NearbySearch.tsx'
@@ -19,6 +19,9 @@ export default function MapPage() {
   const [selected, setSelected] = useState<PointSummary | null>(null)
   const [nearby, setNearby] = useState<NearbyResults | null>(null)
   const { isOpen: isTourOpen, currentStep, skipStep } = useTour()
+  // "Registrar entrega" in "Meus aparelhos" opens the map with the device to deliver (PB15).
+  const [searchParams] = useSearchParams()
+  const deliverDeviceId = searchParams.get('entregar')
 
   // A search started on the home page travels in the navigation state, never in the address bar:
   // it may be the user's own address or location.
@@ -147,7 +150,28 @@ export default function MapPage() {
         </p>
       )}
 
-      {selected && <PointDetailsPanel key={selected.id} point={selected} onClose={closeDetails} />}
+      {deliverDeviceId && !selected && (
+        <MapMessage role="status">
+          <div>
+            <p className="font-semibold">Escolha no mapa o ponto onde você entregou o aparelho.</p>
+            <p className="mt-1 text-slate-600 dark:text-slate-400">
+              Abra o ponto e use “Registrar entrega”.{' '}
+              <Link to="/meus-aparelhos" className="font-semibold underline underline-offset-4">
+                Voltar para meus aparelhos
+              </Link>
+            </p>
+          </div>
+        </MapMessage>
+      )}
+
+      {selected && (
+        <PointDetailsPanel
+          key={selected.id}
+          point={selected}
+          onClose={closeDetails}
+          deliverDeviceId={deliverDeviceId}
+        />
+      )}
     </div>
   )
 }

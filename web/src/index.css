@@ -84,3 +84,45 @@
     transform: none;
   }
 }
+
+/* Printing the administrator report and chart (PB30, PB31): only the content, in black on white,
+   with the header row of long tables repeated on every page. */
+@media print {
+  @page {
+    margin: 14mm 12mm;
+  }
+  html,
+  html.dark {
+    color-scheme: light;
+  }
+  html.dark body,
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+  header,
+  a[href='#conteudo'],
+  [role='dialog'] {
+    display: none !important;
+  }
+  .dark *:not([style]) {
+    color: #000 !important;
+    background-color: transparent !important;
+    border-color: #94a3b8 !important;
+  }
+  .report-table thead {
+    display: table-header-group;
+  }
+  .report-table tr {
+    break-inside: avoid;
+  }
+  .report-table th,
+  .report-table td {
+    border: 1px solid #94a3b8;
+  }
+  .report-totals,
+  .chart-table {
+    border-color: #94a3b8 !important;
+    background: #fff !important;
+  }
+}

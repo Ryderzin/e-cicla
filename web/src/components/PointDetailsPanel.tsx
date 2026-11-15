@@ -6,6 +6,7 @@ import { directionsUrl } from '../lib/directions.ts'
 import { MATERIAL_LABELS, UNNAMED_POINT } from '../lib/materials.ts'
 import { parseOpeningHours } from '../lib/openingHours.ts'
 import { SECONDARY_BUTTON, TEXT_LINK } from '../lib/ui.ts'
+import DeliverySection from './DeliverySection.tsx'
 import { CloseIcon, EditIcon, RouteIcon } from './icons.tsx'
 import ReadAloudButton from './ReadAloudButton.tsx'
 import { stop } from '../lib/speech.ts'
@@ -15,6 +16,8 @@ type DetailsState = { status: 'loading' } | { status: 'error' } | { status: 'suc
 interface PointDetailsPanelProps {
   point: PointSummary
   onClose: () => void
+  /** Device chosen in "Meus aparelhos" to register its delivery (?entregar=<id>). */
+  deliverDeviceId?: string | null
 }
 
 function formatDate(iso: string): string {
@@ -29,7 +32,7 @@ function formatDate(iso: string): string {
  * Details of the selected point: a side panel on desktop and a bottom sheet on phones.
  * Render it with key={point.id} so each point starts with fresh state.
  */
-export default function PointDetailsPanel({ point, onClose }: PointDetailsPanelProps) {
+export default function PointDetailsPanel({ point, onClose, deliverDeviceId }: PointDetailsPanelProps) {
   useEffect(() => {
     return () => {
       stop()
@@ -166,6 +169,15 @@ export default function PointDetailsPanel({ point, onClose }: PointDetailsPanelP
             Sugerir correção
           </Link>
         </div>
+
+        <DeliverySection
+          point={point}
+          preselectedDeviceId={deliverDeviceId}
+          onChooseAnotherPoint={() => {
+            stop()
+            onClose()
+          }}
+        />
 
         <div className="space-y-1.5 text-sm text-slate-600 dark:text-slate-400">
           {state.status === 'success' && state.details.verifiedAt && (
