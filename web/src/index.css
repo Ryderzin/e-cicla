@@ -110,6 +110,14 @@
     background-color: transparent !important;
     border-color: #94a3b8 !important;
   }
+  /* Logo, chart colors and legend swatches keep their colors on paper and in the PDF. */
+  .print-brand,
+  .print-brand *,
+  .chart-swatch,
+  svg {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
   .report-table thead {
     display: table-header-group;
   }

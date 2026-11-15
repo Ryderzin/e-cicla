@@ -127,7 +127,7 @@ function NoticesList() {
                   }}
                   className={TEXT_LINK}
                 >
-                  {notice.type === 'DEVICE_REMINDER' ? 'Ver meus aparelhos' : 'Ver minhas sugestões'}
+                  {notice.type === 'DEVICE_REMINDER' ? 'Ver meus itens' : 'Ver minhas sugestões'}
                 </Link>
                 {!notice.read && (
                   <button

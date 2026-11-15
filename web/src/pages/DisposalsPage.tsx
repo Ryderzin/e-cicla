@@ -2,11 +2,10 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router'
 
 import { deleteDisposal, type Disposal, type DisposalHistory, fetchDisposals } from '../api/disposals.ts'
-import type { Material } from '../api/points.ts'
 import DeviceIcon from '../components/DeviceIcon.tsx'
 import { Notice } from '../components/forms.tsx'
 import RequireSignIn from '../components/RequireSignIn.tsx'
-import { DEVICE_KIND_LABELS, DEVICE_KINDS, formatDay } from '../lib/devices.ts'
+import { formatDay, itemLabel, KIND_LABELS, units } from '../lib/devices.ts'
 import { DANGER_BUTTON, PAGE, SECONDARY_BUTTON, TEXT_LINK } from '../lib/ui.ts'
 
 type HistoryState = { status: 'loading' } | { status: 'error' } | { status: 'success'; history: DisposalHistory }
@@ -107,15 +106,17 @@ function DisposalHistoryView() {
         <>
           <section aria-labelledby="resumo-descartes" className="mt-8 rounded-xl border border-emerald-200 bg-emerald-50 p-5 dark:border-emerald-900/60 dark:bg-emerald-950/30">
             <h2 id="resumo-descartes" className="text-xl font-bold text-slate-900 dark:text-slate-100">
-              Você já registrou {total} {total === 1 ? 'descarte' : 'descartes'}
+              Você já entregou {units(total)} em {state.history.totals.deliveries}{' '}
+              {state.history.totals.deliveries === 1 ? 'entrega' : 'entregas'}
             </h2>
             <ul className="mt-3 flex flex-wrap gap-3">
-              {DEVICE_KINDS.filter((k) => state.history.totals.byCategory[k.value as Material] > 0).map((k) => (
-                <li key={k.value} className="flex items-center gap-2 rounded-full bg-white px-3 py-1.5 text-slate-900 dark:bg-slate-900 dark:text-slate-100">
-                  <DeviceIcon kind={k.value} className="size-5" />
-                  {k.label}: <strong className="tabular-nums">{state.history.totals.byCategory[k.value]}</strong>
-                </li>
-              ))}
+              {(['DEVICE', 'WASTE'] as const)
+                .filter((kind) => state.history.totals.byKind[kind] > 0)
+                .map((kind) => (
+                  <li key={kind} className="rounded-full bg-white px-3 py-1.5 text-slate-900 dark:bg-slate-900 dark:text-slate-100">
+                    {KIND_LABELS[kind]}: <strong className="tabular-nums">{units(state.history.totals.byKind[kind])}</strong>
+                  </li>
+                ))}
             </ul>
           </section>
 
@@ -134,12 +135,14 @@ function DisposalHistoryView() {
                       <div>
                         <p className="font-semibold text-slate-900 dark:text-slate-100">{disposal.deviceDescription}</p>
                         <p className="text-slate-700 dark:text-slate-300">
-                          {DEVICE_KIND_LABELS[disposal.deviceCategory]} · entregue em {formatDay(disposal.disposedOn)} no ponto “
+                          {itemLabel(disposal.kind, disposal.deviceCategory)}
+                          {disposal.kind === 'WASTE' && ` · ${units(disposal.quantity)}`} · entregue em{' '}
+                          {formatDay(disposal.disposedOn)} no ponto “
                           {disposal.pointName}”
                         </p>
                         {!disposal.pointAccepted && (
                           <p className="mt-1 text-sm text-amber-900 dark:text-amber-200">
-                            O ponto não informava aceitar este tipo de aparelho.
+                            O ponto não informava aceitar este tipo de item.
                           </p>
                         )}
                       </div>

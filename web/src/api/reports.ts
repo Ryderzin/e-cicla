@@ -1,5 +1,6 @@
 import { query, request } from './client.ts'
 import type { PointStatus } from './admin.ts'
+import type { ItemKind } from './devices.ts'
 import type { Material, SourceType } from './points.ts'
 
 export type ReportStatusFilter = 'ALL' | PointStatus
@@ -45,20 +46,27 @@ export function fetchPointReport(filters: ReportFilters, signal?: AbortSignal): 
   )
 }
 
-export interface MonthCount {
-  /** yyyy-MM */
-  month: string
+export type ReportPeriod = 'CURRENT_MONTH' | 'LAST_MONTH' | 'LAST_3_MONTHS' | 'LAST_6_MONTHS' | 'LAST_12_MONTHS'
+
+export interface DisposalBucket {
+  /** yyyy-MM-dd (granularity DAY) or yyyy-MM (granularity MONTH) */
+  key: string
   total: number
   byCategory: Record<Material, number>
+  byKind: Record<ItemKind, number>
 }
 
-/** Disposals registered each month, by kind of device (PB31). Only aggregated numbers. */
-export interface DisposalsByMonth {
+/** Items delivered in each day or month of a period, by kind (PB31). Counts units; only aggregated numbers. */
+export interface DisposalsByPeriod {
   generatedAt: string
-  months: MonthCount[]
-  totals: { total: number; byCategory: Record<Material, number> }
+  period: ReportPeriod
+  granularity: 'DAY' | 'MONTH'
+  from: string
+  to: string
+  buckets: DisposalBucket[]
+  totals: { total: number; deliveries: number; byCategory: Record<Material, number>; byKind: Record<ItemKind, number> }
 }
 
-export function fetchDisposalsByMonth(months: 6 | 12, signal?: AbortSignal): Promise<DisposalsByMonth> {
-  return request<DisposalsByMonth>(`/api/admin/reports/disposals-by-month${query({ months })}`, { signal })
+export function fetchDisposalsByPeriod(period: ReportPeriod, signal?: AbortSignal): Promise<DisposalsByPeriod> {
+  return request<DisposalsByPeriod>(`/api/admin/reports/disposals-by-month${query({ period })}`, { signal })
 }

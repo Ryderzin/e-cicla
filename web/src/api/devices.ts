@@ -3,6 +3,8 @@ import type { Material } from './points.ts'
 
 export type BatteryType = 'LITHIUM' | 'ALKALINE' | 'RECHARGEABLE' | 'UNKNOWN'
 export type DeviceStatus = 'REGISTERED' | 'DISPOSED'
+/** A whole device, or loose waste counted in units (batteries, cables, chargers). */
+export type ItemKind = 'DEVICE' | 'WASTE'
 
 export interface DeviceDetails {
   batteryType: BatteryType | null
@@ -11,8 +13,11 @@ export interface DeviceDetails {
 
 export interface Device {
   id: string
+  kind: ItemKind
   category: Material
   description: string
+  /** Always 1 for a device. */
+  quantity: number
   details: DeviceDetails | null
   status: DeviceStatus
   createdAt: string
@@ -20,14 +25,17 @@ export interface Device {
 }
 
 export interface DeviceInput {
+  kind: ItemKind
   category: Material
   description: string
+  quantity: number
   details: DeviceDetails | null
 }
 
 // Same limits as the API (DeviceInput).
 export const DESCRIPTION_MIN = 2
 export const DESCRIPTION_MAX = 80
+export const QUANTITY_MAX = 500
 
 export function fetchDevices(signal?: AbortSignal): Promise<Device[]> {
   return request<Device[]>('/api/devices', { signal })

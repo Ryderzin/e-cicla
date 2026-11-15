@@ -22,6 +22,8 @@ interface BarChartProps {
   /** One sentence that sums up the chart, read by screen readers. */
   summary: string
   unit: [string, string]
+  /** Write the label under every n-th bar only (many daily bars would overlap). */
+  labelEvery?: number
 }
 
 const WIDTH = 720
@@ -46,7 +48,7 @@ function ticks(max: number): number[] {
  * Stacked bar chart drawn in SVG, without a library (PB31). Each bar can be reached with the keyboard
  * and shows the numbers in a tooltip on hover or focus. The page must also show the same numbers in a table.
  */
-export default function BarChart({ series, columns, summary, unit }: BarChartProps) {
+export default function BarChart({ series, columns, summary, unit, labelEvery = 1 }: BarChartProps) {
   const titleId = useId()
   const [active, setActive] = useState<string | null>(null)
   const totals = columns.map((column) => series.reduce((sum, s) => sum + (column.values[s.key] ?? 0), 0))
@@ -136,6 +138,7 @@ export default function BarChart({ series, columns, summary, unit }: BarChartPro
                   />
                 )
               })}
+              {columns.length <= 12 && (
               <text
                 x={x + barWidth / 2}
                 y={y(total) - 6}
@@ -146,9 +149,12 @@ export default function BarChart({ series, columns, summary, unit }: BarChartPro
               >
                 {total}
               </text>
-              <text x={x + barWidth / 2} y={HEIGHT - MARGIN.bottom + 20} textAnchor="middle" fontSize={12} fill="currentColor">
-                {column.label}
-              </text>
+              )}
+              {index % labelEvery === 0 && (
+                <text x={x + barWidth / 2} y={HEIGHT - MARGIN.bottom + 20} textAnchor="middle" fontSize={12} fill="currentColor">
+                  {column.label}
+                </text>
+              )}
             </g>
           )
         })}
@@ -188,7 +194,7 @@ export default function BarChart({ series, columns, summary, unit }: BarChartPro
       <ul className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm text-slate-800 dark:text-slate-200" aria-label="Legenda">
         {series.map((s) => (
           <li key={s.key} className="flex items-center gap-2">
-            <span aria-hidden="true" className="inline-block size-3.5 rounded-sm" style={{ backgroundColor: s.color }} />
+            <span aria-hidden="true" className="chart-swatch inline-block size-3.5 rounded-sm" style={{ backgroundColor: s.color }} />
             {s.label}
           </li>
         ))}

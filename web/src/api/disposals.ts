@@ -1,11 +1,14 @@
 import { request } from './client.ts'
+import type { ItemKind } from './devices.ts'
 import type { Material } from './points.ts'
 
 export interface Disposal {
   id: string
   deviceId: string
+  kind: ItemKind
   deviceCategory: Material
   deviceDescription: string
+  quantity: number
   pointId: string
   pointName: string
   /** False when the point did not say it accepted that kind of device and the user confirmed anyway. */
@@ -17,7 +20,8 @@ export interface Disposal {
 
 export interface DisposalHistory {
   items: Disposal[]
-  totals: { total: number; byCategory: Record<Material, number> }
+  /** total and the maps count units (20 batteries count 20); deliveries counts records. */
+  totals: { total: number; deliveries: number; byCategory: Record<Material, number>; byKind: Record<ItemKind, number> }
 }
 
 export interface DisposalInput {

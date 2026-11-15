@@ -153,11 +153,11 @@ export default function MapPage() {
       {deliverDeviceId && !selected && (
         <MapMessage role="status">
           <div>
-            <p className="font-semibold">Escolha no mapa o ponto onde você entregou o aparelho.</p>
+            <p className="font-semibold">Escolha no mapa o ponto onde você entregou o item.</p>
             <p className="mt-1 text-slate-600 dark:text-slate-400">
               Abra o ponto e use “Registrar entrega”.{' '}
               <Link to="/meus-aparelhos" className="font-semibold underline underline-offset-4">
-                Voltar para meus aparelhos
+                Voltar para meus itens
               </Link>
             </p>
           </div>

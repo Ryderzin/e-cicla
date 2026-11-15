@@ -6,7 +6,7 @@ import { type Device, fetchDevices } from '../api/devices.ts'
 import { createDisposal } from '../api/disposals.ts'
 import type { Material, PointSummary } from '../api/points.ts'
 import { useAuth } from '../auth/useAuth.ts'
-import { DEVICE_KIND_LABELS, todayInSaoPaulo } from '../lib/devices.ts'
+import { itemLabel, todayInSaoPaulo, units } from '../lib/devices.ts'
 import { MATERIAL_LABELS } from '../lib/materials.ts'
 import { loginPath } from '../lib/navigation.ts'
 import { INPUT, PRIMARY_BUTTON, SECONDARY_BUTTON, TEXT_LINK } from '../lib/ui.ts'
@@ -64,7 +64,7 @@ export default function DeliverySection({ point, preselectedDeviceId, onChooseAn
         <Link to={loginPath(location.pathname + location.search)} className={TEXT_LINK}>
           Entre na sua conta
         </Link>{' '}
-        para registrar a entrega dos seus aparelhos.
+        para registrar a entrega dos seus aparelhos, pilhas e baterias.
       </p>
     )
   }
@@ -83,9 +83,9 @@ export default function DeliverySection({ point, preselectedDeviceId, onChooseAn
       </div>
     ) : (
       <p className="text-sm text-slate-700 dark:text-slate-300">
-        Cadastre seus aparelhos em{' '}
+        Cadastre seus aparelhos, pilhas e baterias em{' '}
         <Link to="/meus-aparelhos" className={TEXT_LINK}>
-          Meus aparelhos
+          Meus itens
         </Link>{' '}
         para registrar quando entregá-los.
       </p>
@@ -139,7 +139,7 @@ export default function DeliverySection({ point, preselectedDeviceId, onChooseAn
   return (
     <section aria-labelledby={`${formId}-titulo`} className="rounded-xl border border-slate-200 p-3 dark:border-slate-800">
       <h3 id={`${formId}-titulo`} className="font-semibold text-slate-900 dark:text-slate-100">
-        Meus aparelhos
+        Meus itens
       </h3>
       {notAccepted.length > 0 && (
         <p className="mt-1 text-sm text-amber-900 dark:text-amber-200">
@@ -168,7 +168,7 @@ export default function DeliverySection({ point, preselectedDeviceId, onChooseAn
         <form onSubmit={submit} className="mt-3 space-y-3" aria-label="Registrar entrega neste ponto">
           <div>
             <label htmlFor={`${formId}-aparelho`} className="block text-sm font-semibold text-slate-900 dark:text-slate-100">
-              Qual aparelho você entregou?
+              O que você entregou?
             </label>
             <select
               id={`${formId}-aparelho`}
@@ -180,10 +180,11 @@ export default function DeliverySection({ point, preselectedDeviceId, onChooseAn
               }}
               className={INPUT}
             >
-              <option value="">Escolha um aparelho</option>
+              <option value="">Escolha um item</option>
               {waiting.map((d) => (
                 <option key={d.id} value={d.id}>
-                  {d.description} ({DEVICE_KIND_LABELS[d.category]})
+                  {d.description} ({itemLabel(d.kind, d.category)}
+                  {d.kind === 'WASTE' ? `, ${units(d.quantity)}` : ''})
                 </option>
               ))}
             </select>
@@ -206,7 +207,7 @@ export default function DeliverySection({ point, preselectedDeviceId, onChooseAn
           {confirming && chosen && (
             <div role="alert" className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100">
               <p className="font-semibold">
-                Atenção: este ponto não informa que recebe {DEVICE_KIND_LABELS[chosen.category].toLowerCase()}.
+                Atenção: este ponto não informa que recebe {itemLabel(chosen.kind, chosen.category).toLowerCase()}.
               </p>
               <p className="mt-1">
                 Ele recebe: {point.acceptedMaterials.map((m) => MATERIAL_LABELS[m]).join(', ')}. Confira antes de ir ou

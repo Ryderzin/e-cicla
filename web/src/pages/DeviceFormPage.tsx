@@ -8,9 +8,9 @@ import {
   DESCRIPTION_MIN,
   type DeviceInput,
   fetchDevice,
+  QUANTITY_MAX,
   updateDevice,
 } from '../api/devices.ts'
-import type { Material } from '../api/points.ts'
 import DeviceIcon from '../components/DeviceIcon.tsx'
 import { Notice, TextField } from '../components/forms.tsx'
 import { CheckIcon } from '../components/icons.tsx'
@@ -20,9 +20,13 @@ import {
   asksBattery,
   asksScreen,
   BATTERY_LABELS,
-  DEVICE_KIND_LABELS,
-  DEVICE_KINDS,
+  DEVICE_OPTIONS,
+  ITEM_OPTIONS,
+  type ItemOption,
+  KIND_LABELS,
   preparationTips,
+  units,
+  WASTE_OPTIONS,
 } from '../lib/devices.ts'
 import { INPUT, PAGE, PRIMARY_BUTTON, SECONDARY_BUTTON, TEXT_LINK } from '../lib/ui.ts'
 
@@ -31,10 +35,17 @@ type LoadState = { status: 'loading' } | { status: 'error' } | { status: 'delive
 
 const BATTERY_OPTIONS = Object.keys(BATTERY_LABELS) as BatteryType[]
 
-/** Registering or editing a device with simple questions, one at a time (PB09, PB10). */
+function optionKey(option: ItemOption): string {
+  return `${option.kind}:${option.category}`
+}
+
+/**
+ * Registering or editing an item with simple questions, one at a time (PB09, PB10). Whole devices and loose
+ * waste (batteries, cables, chargers) are separate choices; loose waste is counted in units.
+ */
 export default function DeviceFormPage() {
   return (
-    <RequireSignIn title="Cadastrar aparelho" reason="Entre na sua conta para cadastrar seus aparelhos.">
+    <RequireSignIn title="Cadastrar item" reason="Entre na sua conta para cadastrar o que você quer descartar.">
       <DeviceForm />
     </RequireSignIn>
   )
@@ -47,8 +58,9 @@ function DeviceForm() {
   const headingRef = useRef<HTMLHeadingElement>(null)
   const [load, setLoad] = useState<LoadState>(editing ? { status: 'loading' } : { status: 'ready' })
   const [step, setStep] = useState<Step>('kind')
-  const [kind, setKind] = useState<Material | null>(null)
+  const [choice, setChoice] = useState<ItemOption | null>(null)
   const [description, setDescription] = useState('')
+  const [quantity, setQuantity] = useState('1')
   const [battery, setBattery] = useState<BatteryType | ''>('')
   const [screen, setScreen] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -65,8 +77,9 @@ function DeviceForm() {
           setLoad({ status: 'delivered' })
           return
         }
-        setKind(device.category)
+        setChoice(ITEM_OPTIONS.find((o) => o.kind === device.kind && o.category === device.category) ?? null)
         setDescription(device.description)
+        setQuantity(String(device.quantity))
         setBattery(device.details?.batteryType ?? '')
         setScreen(device.details?.screenSizeInches ? String(device.details.screenSizeInches) : '')
         setLoad({ status: 'ready' })
@@ -89,20 +102,37 @@ function DeviceForm() {
     headingRef.current?.focus()
   }, [step])
 
-  const hasDetails = kind !== null && (asksBattery(kind) || asksScreen(kind))
+  const isWaste = choice?.kind === 'WASTE'
+  const hasDetails = choice !== null && (asksBattery(choice.category) || asksScreen(choice.kind, choice.category))
   const steps: Step[] = hasDetails ? ['kind', 'name', 'details', 'confirm'] : ['kind', 'name', 'confirm']
   const position = steps.indexOf(step) + 1
+  const count = Number(quantity)
+
+  function choose(option: ItemOption) {
+    // A suggested name for loose waste, which people rarely name; kept if the person already wrote one.
+    if (option.defaultName && (!description.trim() || WASTE_OPTIONS.some((o) => o.defaultName === description))) {
+      setDescription(option.defaultName)
+    }
+    if (option.kind === 'DEVICE' && WASTE_OPTIONS.some((o) => o.defaultName === description)) {
+      setDescription('')
+    }
+    setChoice(option)
+  }
 
   function next(event: FormEvent) {
     event.preventDefault()
     setError(null)
     if (step === 'kind') {
-      if (!kind) {
-        setError('Escolha o tipo de aparelho.')
+      if (!choice) {
+        setError('Escolha o que você quer descartar.')
         return
       }
       setStep('name')
     } else if (step === 'name') {
+      if (isWaste && (!Number.isInteger(count) || count < 1 || count > QUANTITY_MAX)) {
+        setError(`Informe a quantidade, de 1 a ${QUANTITY_MAX}.`)
+        return
+      }
       const text = description.trim()
       if (text.length < DESCRIPTION_MIN || text.length > DESCRIPTION_MAX) {
         setError(`Escreva um nome com ${DESCRIPTION_MIN} a ${DESCRIPTION_MAX} letras.`)
@@ -127,14 +157,16 @@ function DeviceForm() {
   }
 
   async function save() {
-    if (!kind) {
+    if (!choice) {
       return
     }
-    const size = screen.trim() && asksScreen(kind) ? Number(screen.replace(',', '.')) : null
-    const batteryType = battery && asksBattery(kind) ? battery : null
+    const size = screen.trim() && asksScreen(choice.kind, choice.category) ? Number(screen.replace(',', '.')) : null
+    const batteryType = battery && asksBattery(choice.category) ? battery : null
     const input: DeviceInput = {
-      category: kind,
+      kind: choice.kind,
+      category: choice.category,
       description: description.trim(),
+      quantity: isWaste ? count : 1,
       details: batteryType || size ? { batteryType, screenSizeInches: size } : null,
     }
     setSaving(true)
@@ -148,13 +180,13 @@ function DeviceForm() {
         state: { message: id ? `“${input.description}” foi atualizado.` : `“${input.description}” foi cadastrado.` },
       })
     } catch {
-      setError('Não foi possível salvar o aparelho. Tente de novo.')
+      setError('Não foi possível salvar. Tente de novo.')
       setSaving(false)
     }
   }
 
-  const title = editing ? 'Editar aparelho' : 'Cadastrar aparelho'
-  const tips = kind ? preparationTips(kind, battery || null) : []
+  const title = editing ? 'Editar item' : 'Cadastrar item'
+  const tips = choice ? preparationTips(choice.kind, choice.category, battery || null) : []
 
   if (load.status !== 'ready') {
     return (
@@ -168,19 +200,48 @@ function DeviceForm() {
         )}
         {load.status === 'error' && (
           <div className="mt-4">
-            <Notice kind="error">Não foi possível carregar este aparelho.</Notice>
+            <Notice kind="error">Não foi possível carregar este item.</Notice>
           </div>
         )}
         {load.status === 'delivered' && (
           <div className="mt-4">
-            <Notice kind="info">Este aparelho já foi entregue e não pode mais ser editado.</Notice>
+            <Notice kind="info">Este item já foi entregue e não pode mais ser editado.</Notice>
           </div>
         )}
         <p className="mt-6">
           <Link to="/meus-aparelhos" className={TEXT_LINK}>
-            Voltar para meus aparelhos
+            Voltar para meus itens
           </Link>
         </p>
+      </div>
+    )
+  }
+
+  function optionCards(options: ItemOption[]) {
+    return (
+      <div className="mt-3 grid gap-3 sm:grid-cols-2">
+        {options.map((option) => (
+          <label
+            key={optionKey(option)}
+            className="flex min-h-[44px] cursor-pointer items-start gap-3 rounded-xl border-2 border-slate-200 p-4 hover:border-emerald-400 has-[:checked]:border-emerald-700 has-[:checked]:bg-emerald-50 has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-blue-700 dark:border-slate-700 dark:has-[:checked]:border-emerald-500 dark:has-[:checked]:bg-emerald-950/40"
+          >
+            <input
+              type="radio"
+              name="tipo"
+              value={optionKey(option)}
+              checked={choice !== null && optionKey(choice) === optionKey(option)}
+              onChange={() => choose(option)}
+              className="sr-only"
+            />
+            <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200">
+              <DeviceIcon kind={option.category} waste={option.kind === 'WASTE'} />
+            </span>
+            <span>
+              <span className="block font-semibold text-slate-900 dark:text-slate-100">{option.label}</span>
+              <span className="block text-sm text-slate-700 dark:text-slate-300">{option.hint}</span>
+            </span>
+          </label>
+        ))}
       </div>
     )
   }
@@ -190,13 +251,13 @@ function DeviceForm() {
       <title>{`${title} | E-Cicla`}</title>
       <p className="text-slate-700 dark:text-slate-300">
         <Link to="/meus-aparelhos" className={TEXT_LINK}>
-          Meus aparelhos
+          Meus itens
         </Link>
       </p>
       <h1 className="mt-2 text-3xl font-bold text-slate-900 dark:text-slate-100">{title}</h1>
       <p className="mt-1 text-slate-700 dark:text-slate-300">
-        {/* How many questions depends on the kind of device, so the total shows only after choosing it. */}
-        {kind ? `Pergunta ${position} de ${steps.length}` : 'Pergunta 1'}
+        {/* How many questions depends on what is chosen, so the total shows only after choosing it. */}
+        {choice ? `Pergunta ${position} de ${steps.length}` : 'Pergunta 1'}
       </p>
       <div
         className="mt-2 h-2 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800"
@@ -220,45 +281,52 @@ function DeviceForm() {
           <fieldset>
             <legend>
               <h2 ref={headingRef} tabIndex={-1} className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-                Que tipo de aparelho é?
+                O que você quer descartar?
               </h2>
             </legend>
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              {DEVICE_KINDS.map((option) => (
-                <label
-                  key={option.value}
-                  className="flex min-h-[44px] cursor-pointer items-start gap-3 rounded-xl border-2 border-slate-200 p-4 hover:border-emerald-400 has-[:checked]:border-emerald-700 has-[:checked]:bg-emerald-50 has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-blue-700 dark:border-slate-700 dark:has-[:checked]:border-emerald-500 dark:has-[:checked]:bg-emerald-950/40"
-                >
-                  <input
-                    type="radio"
-                    name="tipo"
-                    value={option.value}
-                    checked={kind === option.value}
-                    onChange={() => setKind(option.value)}
-                    className="sr-only"
-                  />
-                  <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200">
-                    <DeviceIcon kind={option.value} />
-                  </span>
-                  <span>
-                    <span className="block font-semibold text-slate-900 dark:text-slate-100">{option.label}</span>
-                    <span className="block text-sm text-slate-700 dark:text-slate-300">{option.hint}</span>
-                  </span>
-                </label>
-              ))}
+            <div role="group" aria-labelledby="grupo-aparelhos" className="mt-4">
+              <h3 id="grupo-aparelhos" className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+                Um aparelho
+              </h3>
+              <p className="text-sm text-slate-700 dark:text-slate-300">Cadastrado um por um, com um nome.</p>
+              {optionCards(DEVICE_OPTIONS)}
+            </div>
+            <div role="group" aria-labelledby="grupo-residuos" className="mt-6">
+              <h3 id="grupo-residuos" className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+                Pilhas, baterias ou acessórios soltos
+              </h3>
+              <p className="text-sm text-slate-700 dark:text-slate-300">Cadastrados de uma vez, informando a quantidade.</p>
+              {optionCards(WASTE_OPTIONS)}
             </div>
           </fieldset>
         )}
 
-        {step === 'name' && (
+        {step === 'name' && choice && (
           <div>
             <h2 ref={headingRef} tabIndex={-1} className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-              Como você chama este aparelho?
+              {isWaste ? 'Quantos são?' : 'Como você chama este aparelho?'}
             </h2>
-            <div className="mt-4">
+            <div className="mt-4 space-y-4">
+              {isWaste && (
+                <TextField
+                  label="Quantidade"
+                  hint={`Quantas unidades você vai levar, de 1 a ${QUANTITY_MAX}.`}
+                  type="number"
+                  inputMode="numeric"
+                  min={1}
+                  max={QUANTITY_MAX}
+                  step={1}
+                  value={quantity}
+                  onChange={(event) => setQuantity(event.target.value)}
+                />
+              )}
               <TextField
-                label="Nome do aparelho"
-                hint="Um nome para você reconhecer, por exemplo: “Celular antigo da sala”."
+                label={isWaste ? 'Nome' : 'Nome do aparelho'}
+                hint={
+                  isWaste
+                    ? 'Um nome para você reconhecer, por exemplo: “Pilhas do controle remoto”.'
+                    : 'Um nome para você reconhecer, por exemplo: “Celular antigo da sala”.'
+                }
                 value={description}
                 maxLength={DESCRIPTION_MAX}
                 onChange={(event) => setDescription(event.target.value)}
@@ -268,7 +336,7 @@ function DeviceForm() {
           </div>
         )}
 
-        {step === 'details' && kind && (
+        {step === 'details' && choice && (
           <div>
             <h2 ref={headingRef} tabIndex={-1} className="text-2xl font-bold text-slate-900 dark:text-slate-100">
               Alguns detalhes (opcional)
@@ -277,10 +345,10 @@ function DeviceForm() {
               Ajudam a dar orientações mais certas. Se não souber, deixe em branco.
             </p>
             <div className="mt-4 space-y-4">
-              {asksBattery(kind) && (
+              {asksBattery(choice.category) && (
                 <div>
                   <label htmlFor="bateria" className="block font-semibold text-slate-900 dark:text-slate-100">
-                    Que tipo de bateria ou pilha ele usa?
+                    {isWaste ? 'Que tipo de pilha ou bateria são?' : 'Que tipo de bateria ou pilha ele usa?'}
                   </label>
                   <select
                     id="bateria"
@@ -297,7 +365,7 @@ function DeviceForm() {
                   </select>
                 </div>
               )}
-              {asksScreen(kind) && (
+              {asksScreen(choice.kind, choice.category) && (
                 <TextField
                   label="Tamanho da tela, em polegadas"
                   hint="Por exemplo: 6,5 para um celular ou 14 para um notebook."
@@ -310,21 +378,22 @@ function DeviceForm() {
           </div>
         )}
 
-        {step === 'confirm' && kind && (
+        {step === 'confirm' && choice && (
           <div>
             <h2 ref={headingRef} tabIndex={-1} className="text-2xl font-bold text-slate-900 dark:text-slate-100">
               Confira e veja como preparar
             </h2>
             <div className="mt-4 flex items-center gap-3 rounded-xl border border-slate-200 p-4 dark:border-slate-800">
               <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200">
-                <DeviceIcon kind={kind} />
+                <DeviceIcon kind={choice.category} waste={isWaste} />
               </span>
               <span>
                 <span className="block font-semibold text-slate-900 dark:text-slate-100">{description.trim()}</span>
                 <span className="text-slate-700 dark:text-slate-300">
-                  {DEVICE_KIND_LABELS[kind]}
-                  {battery && asksBattery(kind) && ` · ${BATTERY_LABELS[battery]}`}
-                  {screen.trim() && asksScreen(kind) && ` · tela de ${screen.trim()} polegadas`}
+                  {KIND_LABELS[choice.kind]} · {choice.label}
+                  {isWaste && ` · ${units(count)}`}
+                  {battery && asksBattery(choice.category) && ` · ${BATTERY_LABELS[battery]}`}
+                  {screen.trim() && asksScreen(choice.kind, choice.category) && ` · tela de ${screen.trim()} polegadas`}
                 </span>
               </span>
             </div>
@@ -357,7 +426,7 @@ function DeviceForm() {
             </button>
           )}
           <button type="submit" disabled={saving} className={PRIMARY_BUTTON}>
-            {step === 'confirm' ? (saving ? 'Salvando…' : editing ? 'Salvar alterações' : 'Cadastrar aparelho') : 'Continuar'}
+            {step === 'confirm' ? (saving ? 'Salvando…' : editing ? 'Salvar alterações' : 'Cadastrar') : 'Continuar'}
           </button>
         </div>
       </form>

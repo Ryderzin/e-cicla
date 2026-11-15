@@ -39,7 +39,7 @@ function NavLinks() {
       {status === 'signed-in' && (
         <li>
           <NavLink to="/meus-aparelhos" className={navLinkClass}>
-            Meus aparelhos
+            Meus itens
           </NavLink>
         </li>
       )}

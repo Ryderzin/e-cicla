@@ -6,8 +6,11 @@ import type { Material, SourceType } from '../api/points.ts'
 import { fetchPointReport, type PointReport, type ReportFilters, type ReportStatusFilter } from '../api/reports.ts'
 import { useAuth } from '../auth/useAuth.ts'
 import AdminNav from '../components/AdminNav.tsx'
+import DonutChart from '../components/DonutChart.tsx'
 import { Notice } from '../components/forms.tsx'
+import PrintBrand from '../components/PrintBrand.tsx'
 import { MATERIAL_LABELS, MATERIALS, SOURCE_LABELS, UNNAMED_POINT } from '../lib/materials.ts'
+import { formatPercent } from '../lib/percent.ts'
 import { INPUT, PAGE, PRIMARY_BUTTON, SECONDARY_BUTTON } from '../lib/ui.ts'
 
 type ReportState =
@@ -21,6 +24,9 @@ const STATUS_OPTIONS: { value: ReportStatusFilter; label: string }[] = [
   { value: 'INACTIVE', label: 'Desativados' },
 ]
 const STATUS_LABELS: Record<PointStatus, string> = { ACTIVE: 'Ativo', INACTIVE: 'Desativado' }
+// Colors with contrast of at least 3:1 against the light and the dark background.
+const STATUS_COLORS: Record<PointStatus, string> = { ACTIVE: '#059669', INACTIVE: '#64748b' }
+const SOURCE_COLORS: Record<SourceType, string> = { OSM: '#2563eb', MANUAL: '#059669', SUGGESTION: '#c026d3' }
 const SOURCE_REPORT_LABELS: Record<SourceType, string> = {
   ...SOURCE_LABELS,
   MANUAL: 'Cadastro da equipe',
@@ -90,6 +96,7 @@ export default function AdminReportPage() {
   return (
     <div className={PAGE}>
       <title>Relatório de pontos de coleta | Administração | E-Cicla</title>
+      <PrintBrand />
       <div className="print:hidden">
         <AdminNav />
       </div>
@@ -280,32 +287,57 @@ function ReportBody({ report, adminName }: { report: PointReport; adminName: str
           no relatório: {plural(totals.byStatus.ACTIVE, 'ativo', 'ativos')} e{' '}
           {plural(totals.byStatus.INACTIVE, 'desativado', 'desativados')}.
         </p>
-        <div className="mt-4 grid gap-6 md:grid-cols-2">
-          <div>
-            <h3 className="font-semibold">Pontos que aceitam cada material</h3>
-            <dl className="mt-2 space-y-1">
-              {MATERIALS.map((material) => (
-                <div key={material} className="flex justify-between gap-4 border-b border-emerald-200/70 pb-1 dark:border-emerald-900/50">
-                  <dt>{MATERIAL_LABELS[material]}</dt>
-                  <dd className="tabular-nums font-semibold">{totals.byMaterial[material]}</dd>
-                </div>
-              ))}
-            </dl>
-            <p className="mt-2 text-sm text-slate-700 dark:text-slate-300 print:text-black">
-              Um ponto pode aceitar mais de um material, por isso esta soma pode ser maior que o total de pontos.
-            </p>
-          </div>
-          <div>
-            <h3 className="font-semibold">Pontos por origem</h3>
-            <dl className="mt-2 space-y-1">
-              {(Object.keys(SOURCE_REPORT_LABELS) as SourceType[]).map((source) => (
-                <div key={source} className="flex justify-between gap-4 border-b border-emerald-200/70 pb-1 dark:border-emerald-900/50">
-                  <dt>{SOURCE_REPORT_LABELS[source]}</dt>
-                  <dd className="tabular-nums font-semibold">{totals.bySource[source]}</dd>
-                </div>
-              ))}
-            </dl>
-          </div>
+        <div className="mt-6 grid gap-8 lg:grid-cols-2">
+          <DonutChart
+            title="Pontos por situação"
+            unit={['ponto', 'pontos']}
+            segments={(['ACTIVE', 'INACTIVE'] as const).map((status) => ({
+              key: status,
+              label: status === 'ACTIVE' ? 'Ativos' : 'Desativados',
+              value: totals.byStatus[status],
+              color: STATUS_COLORS[status],
+            }))}
+          />
+          <DonutChart
+            title="Pontos por origem"
+            unit={['ponto', 'pontos']}
+            segments={(Object.keys(SOURCE_REPORT_LABELS) as SourceType[]).map((source) => ({
+              key: source,
+              label: SOURCE_REPORT_LABELS[source],
+              value: totals.bySource[source],
+              color: SOURCE_COLORS[source],
+            }))}
+          />
+        </div>
+        <div className="mt-8">
+          <h3 className="font-semibold">Pontos que aceitam cada material</h3>
+          <ul className="mt-3 space-y-3">
+            {MATERIALS.map((material) => {
+              const value = totals.byMaterial[material]
+              return (
+                <li key={material}>
+                  <div className="flex justify-between gap-4 text-sm">
+                    <span>{MATERIAL_LABELS[material]}</span>
+                    <span className="tabular-nums">
+                      {value} de {totals.count} · <strong>{formatPercent(value, totals.count)}</strong>
+                    </span>
+                  </div>
+                  <div
+                    className="mt-1 h-3 overflow-hidden rounded-full bg-emerald-100 dark:bg-emerald-950/60"
+                    aria-hidden="true"
+                  >
+                    <div
+                      className="chart-swatch h-full rounded-full"
+                      style={{ width: `${totals.count ? (value / totals.count) * 100 : 0}%`, backgroundColor: '#059669' }}
+                    />
+                  </div>
+                </li>
+              )
+            })}
+          </ul>
+          <p className="mt-3 text-sm text-slate-700 dark:text-slate-300 print:text-black">
+            Um ponto pode aceitar mais de um material, por isso as porcentagens somam mais de 100%.
+          </p>
         </div>
       </section>
 
