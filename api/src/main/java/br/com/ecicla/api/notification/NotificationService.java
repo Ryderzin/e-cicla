@@ -114,8 +114,8 @@ public class NotificationService {
             return;
         }
         Notification saved = create(userId, NotificationType.DEVICE_REMINDER,
-                "Você tem aparelhos esperando o descarte",
-                "Há aparelhos cadastrados há mais de 30 dias que ainda não foram entregues. Veja os pontos de coleta "
+                "Você tem itens esperando o descarte",
+                "Há itens cadastrados há mais de 30 dias que ainda não foram entregues. Veja os pontos de coleta "
                         + "mais próximos e registre a entrega quando levar.",
                 "/meus-aparelhos");
         if (preferencesOf(userId).remindersEmail()) {

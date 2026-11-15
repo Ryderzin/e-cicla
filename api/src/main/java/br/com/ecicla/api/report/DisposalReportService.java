@@ -2,6 +2,7 @@ package br.com.ecicla.api.report;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.EnumMap;
@@ -12,15 +13,14 @@ import java.util.Map;
 import org.springframework.stereotype.Service;
 
 import br.com.ecicla.api.common.TimeConfig;
+import br.com.ecicla.api.device.ItemKind;
 import br.com.ecicla.api.disposal.Disposal;
 import br.com.ecicla.api.disposal.DisposalRepository;
 import br.com.ecicla.api.point.Material;
 
-/** Counts the disposals of each month, ending in the current month in São Paulo (PB31). */
+/** Counts the items delivered in each day or month of a period, in São Paulo time (PB31). */
 @Service
 public class DisposalReportService {
-
-    static final List<Integer> ALLOWED_MONTHS = List.of(6, 12);
 
     private final DisposalRepository disposals;
     private final Clock clock;
@@ -30,46 +30,64 @@ public class DisposalReportService {
         this.clock = clock;
     }
 
-    public DisposalsByMonth byMonth(int months) {
-        if (!ALLOWED_MONTHS.contains(months)) {
-            throw new IllegalArgumentException("months must be 6 or 12");
-        }
-        YearMonth last = YearMonth.now(clock.withZone(TimeConfig.SAO_PAULO));
-        YearMonth first = last.minusMonths(months - 1L);
+    public DisposalsByMonth byPeriod(ReportPeriod period) {
+        LocalDate today = LocalDate.now(clock.withZone(TimeConfig.SAO_PAULO));
+        LocalDate from = period.start(today);
+        LocalDate to = period.end(today);
 
-        Map<String, Map<Material, Long>> counts = new LinkedHashMap<>();
-        for (YearMonth m = first; !m.isAfter(last); m = m.plusMonths(1)) {
-            counts.put(m.toString(), zeros());
+        Map<String, Counts> buckets = new LinkedHashMap<>();
+        if (period.daily()) {
+            for (LocalDate d = from; !d.isAfter(to); d = d.plusDays(1)) {
+                buckets.put(d.toString(), new Counts());
+            }
+        } else {
+            for (YearMonth m = YearMonth.from(from); !m.isAfter(YearMonth.from(to)); m = m.plusMonths(1)) {
+                buckets.put(m.toString(), new Counts());
+            }
         }
-        List<Disposal> found = disposals.findDisposedBetween(
-                first.atDay(1).toString(), last.plusMonths(1).atDay(1).toString());
-        Map<Material, Long> totals = zeros();
-        for (Disposal d : found) {
-            if (d.disposedOn() == null || d.disposedOn().length() < 7 || d.deviceCategory() == null) {
+
+        Counts totals = new Counts();
+        long deliveries = 0;
+        for (Disposal d : disposals.findDisposedBetween(from.toString(), to.plusDays(1).toString())) {
+            if (d.disposedOn() == null || d.disposedOn().length() < 10 || d.deviceCategory() == null) {
                 continue;
             }
-            Map<Material, Long> month = counts.get(d.disposedOn().substring(0, 7));
-            if (month != null) {
-                month.merge(d.deviceCategory(), 1L, Long::sum);
-                totals.merge(d.deviceCategory(), 1L, Long::sum);
+            String key = period.daily() ? d.disposedOn().substring(0, 10) : d.disposedOn().substring(0, 7);
+            Counts bucket = buckets.get(key);
+            if (bucket != null) {
+                bucket.add(d);
+                totals.add(d);
+                deliveries++;
             }
         }
 
-        List<DisposalsByMonth.Month> result = new ArrayList<>();
-        counts.forEach((month, byCategory) -> result.add(new DisposalsByMonth.Month(month, sum(byCategory),
-                byCategory)));
-        return new DisposalsByMonth(Instant.now(clock), result, new DisposalsByMonth.Totals(sum(totals), totals));
+        List<DisposalsByMonth.Bucket> result = new ArrayList<>();
+        buckets.forEach((key, c) -> result.add(new DisposalsByMonth.Bucket(key, c.total, c.byCategory, c.byKind)));
+        return new DisposalsByMonth(Instant.now(clock), period, period.daily() ? "DAY" : "MONTH", from.toString(),
+                to.toString(), result,
+                new DisposalsByMonth.Totals(totals.total, deliveries, totals.byCategory, totals.byKind));
     }
 
-    private static Map<Material, Long> zeros() {
-        Map<Material, Long> map = new EnumMap<>(Material.class);
-        for (Material m : Material.values()) {
-            map.put(m, 0L);
+    /** Units by category and by kind of item. */
+    private static final class Counts {
+        long total;
+        final Map<Material, Long> byCategory = new EnumMap<>(Material.class);
+        final Map<ItemKind, Long> byKind = new EnumMap<>(ItemKind.class);
+
+        Counts() {
+            for (Material m : Material.values()) {
+                byCategory.put(m, 0L);
+            }
+            for (ItemKind k : ItemKind.values()) {
+                byKind.put(k, 0L);
+            }
         }
-        return map;
-    }
 
-    private static long sum(Map<Material, Long> byCategory) {
-        return byCategory.values().stream().mapToLong(Long::longValue).sum();
+        void add(Disposal d) {
+            long units = d.units();
+            total += units;
+            byCategory.merge(d.deviceCategory(), units, Long::sum);
+            byKind.merge(d.kind(), units, Long::sum);
+        }
     }
 }

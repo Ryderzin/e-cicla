@@ -45,12 +45,16 @@ public class AdminReportController {
         return pointReports.build(statusFilter, material, q);
     }
 
+    /** {@code period}: CURRENT_MONTH, LAST_MONTH, LAST_3_MONTHS, LAST_6_MONTHS or LAST_12_MONTHS (the default). */
     @GetMapping("/disposals-by-month")
-    public DisposalsByMonth disposalsByMonth(@RequestParam(defaultValue = "12") int months) {
+    public DisposalsByMonth disposalsByMonth(@RequestParam(defaultValue = "LAST_12_MONTHS") String period) {
+        ReportPeriod chosen;
         try {
-            return disposalReports.byMonth(months);
+            chosen = ReportPeriod.valueOf(period.strip().toUpperCase());
         } catch (IllegalArgumentException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "period must be CURRENT_MONTH, LAST_MONTH, LAST_3_MONTHS, LAST_6_MONTHS or LAST_12_MONTHS");
         }
+        return disposalReports.byPeriod(chosen);
     }
 }

@@ -27,6 +27,7 @@ import br.com.ecicla.api.auth.Role;
 import br.com.ecicla.api.auth.SessionService;
 import br.com.ecicla.api.auth.User;
 import br.com.ecicla.api.common.FixedClock;
+import br.com.ecicla.api.device.ItemKind;
 import br.com.ecicla.api.disposal.Disposal;
 import br.com.ecicla.api.disposal.DisposalRepository;
 import br.com.ecicla.api.point.CollectionPoint;
@@ -152,37 +153,67 @@ class AdminReportControllerTest {
                         disposal("2026-11-30", Material.BATTERIES),
                         disposal("2026-11-02", Material.BATTERIES),
                         disposal("2026-11-15", Material.MOBILE_PHONES),
-                        disposal("2026-09-10", Material.COMPUTERS)));
+                        disposal("2026-09-10", Material.COMPUTERS),
+                        new Disposal(null, "u1", "d9", Material.BATTERIES, "Pilhas", "p1", "Ponto", true, "2026-11-20",
+                                T, ItemKind.WASTE, 10)));
 
-        mvc.perform(get("/api/admin/reports/disposals-by-month?months=6").header("Authorization", "Bearer token-admin"))
+        mvc.perform(get("/api/admin/reports/disposals-by-month?period=LAST_6_MONTHS")
+                        .header("Authorization", "Bearer token-admin"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.months.length()").value(6))
-                .andExpect(jsonPath("$.months[0].month").value("2026-06"))
-                .andExpect(jsonPath("$.months[0].total").value(0))
-                .andExpect(jsonPath("$.months[3].month").value("2026-09"))
-                .andExpect(jsonPath("$.months[3].byCategory.COMPUTERS").value(1))
-                .andExpect(jsonPath("$.months[5].month").value("2026-11"))
-                .andExpect(jsonPath("$.months[5].total").value(3))
-                .andExpect(jsonPath("$.months[5].byCategory.BATTERIES").value(2))
-                .andExpect(jsonPath("$.totals.total").value(4))
-                .andExpect(jsonPath("$.totals.byCategory.MOBILE_PHONES").value(1));
-        verify(disposals).findDisposedBetween("2026-06-01", "2026-12-01");
+                .andExpect(jsonPath("$.granularity").value("MONTH"))
+                .andExpect(jsonPath("$.from").value("2026-06-01"))
+                .andExpect(jsonPath("$.to").value("2026-11-30"))
+                .andExpect(jsonPath("$.buckets.length()").value(6))
+                .andExpect(jsonPath("$.buckets[0].key").value("2026-06"))
+                .andExpect(jsonPath("$.buckets[0].total").value(0))
+                .andExpect(jsonPath("$.buckets[3].byCategory.COMPUTERS").value(1))
+                // November: two single batteries, a phone and one delivery of 10 batteries.
+                .andExpect(jsonPath("$.buckets[5].key").value("2026-11"))
+                .andExpect(jsonPath("$.buckets[5].total").value(13))
+                .andExpect(jsonPath("$.buckets[5].byCategory.BATTERIES").value(12))
+                .andExpect(jsonPath("$.totals.total").value(14))
+                .andExpect(jsonPath("$.totals.deliveries").value(5))
+                .andExpect(jsonPath("$.totals.byKind.WASTE").value(12))
+                .andExpect(jsonPath("$.totals.byKind.DEVICE").value(2));
     }
 
     @Test
-    void acceptsOnlySixOrTwelveMonths() throws Exception {
-        when(disposals.findDisposedBetween(anyString(), anyString()))
-                .thenReturn(List.of());
+    void singleMonthPeriodsAreShownDayByDay() throws Exception {
+        when(disposals.findDisposedBetween("2026-11-01", "2026-12-01"))
+                .thenReturn(List.of(disposal("2026-11-30", Material.BATTERIES)));
+        mvc.perform(get("/api/admin/reports/disposals-by-month?period=CURRENT_MONTH")
+                        .header("Authorization", "Bearer token-admin"))
+                .andExpect(jsonPath("$.granularity").value("DAY"))
+                .andExpect(jsonPath("$.buckets.length()").value(30))
+                .andExpect(jsonPath("$.buckets[29].key").value("2026-11-30"))
+                .andExpect(jsonPath("$.buckets[29].total").value(1));
+
+        when(disposals.findDisposedBetween("2026-10-01", "2026-11-01")).thenReturn(List.of());
+        mvc.perform(get("/api/admin/reports/disposals-by-month?period=LAST_MONTH")
+                        .header("Authorization", "Bearer token-admin"))
+                .andExpect(jsonPath("$.from").value("2026-10-01"))
+                .andExpect(jsonPath("$.to").value("2026-10-31"))
+                .andExpect(jsonPath("$.buckets.length()").value(31));
+    }
+
+    @Test
+    void acceptsOnlyTheListedPeriods() throws Exception {
+        when(disposals.findDisposedBetween(anyString(), anyString())).thenReturn(List.of());
         mvc.perform(get("/api/admin/reports/disposals-by-month").header("Authorization", "Bearer token-admin"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.months.length()").value(12))
-                .andExpect(jsonPath("$.months[0].month").value("2025-12"))
-                .andExpect(jsonPath("$.totals.total").value(0));
-        mvc.perform(get("/api/admin/reports/disposals-by-month?months=7").header("Authorization", "Bearer token-admin"))
+                .andExpect(jsonPath("$.period").value("LAST_12_MONTHS"))
+                .andExpect(jsonPath("$.buckets.length()").value(12))
+                .andExpect(jsonPath("$.buckets[0].key").value("2025-12"));
+        mvc.perform(get("/api/admin/reports/disposals-by-month?period=LAST_3_MONTHS")
+                        .header("Authorization", "Bearer token-admin"))
+                .andExpect(jsonPath("$.buckets.length()").value(3))
+                .andExpect(jsonPath("$.buckets[0].key").value("2026-09"));
+        mvc.perform(get("/api/admin/reports/disposals-by-month?period=LAST_7_MONTHS")
+                        .header("Authorization", "Bearer token-admin"))
                 .andExpect(status().isBadRequest());
     }
 
     private static Disposal disposal(String day, Material category) {
-        return new Disposal(null, "u1", "d1", category, "Aparelho", "p1", "Ponto", true, day, T);
+        return new Disposal(null, "u1", "d1", category, "Aparelho", "p1", "Ponto", true, day, T, null, null);
     }
 }

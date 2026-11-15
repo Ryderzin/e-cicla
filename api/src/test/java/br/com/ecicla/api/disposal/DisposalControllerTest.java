@@ -38,6 +38,7 @@ import br.com.ecicla.api.device.DeviceController;
 import br.com.ecicla.api.device.DeviceRepository;
 import br.com.ecicla.api.device.DeviceService;
 import br.com.ecicla.api.device.DeviceStatus;
+import br.com.ecicla.api.device.ItemKind;
 import br.com.ecicla.api.point.CollectionPoint;
 import br.com.ecicla.api.point.CollectionPointRepository;
 import br.com.ecicla.api.point.Material;
@@ -57,7 +58,7 @@ class DisposalControllerTest {
     private static final String DISPOSAL_ID = "66fb1c2e8f1b2a3c4d5e6f90";
     private static final Instant T = Instant.parse("2026-10-01T12:00:00Z");
     private static final Device PHONE = new Device(PHONE_ID, ANA, Material.MOBILE_PHONES, "Celular antigo", null,
-            DeviceStatus.REGISTERED, T, T);
+            DeviceStatus.REGISTERED, T, T, null, null);
 
     @Autowired
     private MockMvc mvc;
@@ -82,12 +83,13 @@ class DisposalControllerTest {
         when(devices.save(any())).thenAnswer(invocation -> {
             Device d = invocation.getArgument(0);
             return d.id() != null ? d : new Device("66fb1c2e8f1b2a3c4d5e6f11", d.userId(), d.category(),
-                    d.description(), d.details(), d.status(), d.createdAt(), d.updatedAt());
+                    d.description(), d.details(), d.status(), d.createdAt(), d.updatedAt(), d.kind(), d.quantity());
         });
         when(disposals.save(any())).thenAnswer(invocation -> {
             Disposal d = invocation.getArgument(0);
             return new Disposal(DISPOSAL_ID, d.userId(), d.deviceId(), d.deviceCategory(), d.deviceDescription(),
-                    d.pointId(), d.pointName(), d.pointAccepted(), d.disposedOn(), d.createdAt());
+                    d.pointId(), d.pointName(), d.pointAccepted(), d.disposedOn(), d.createdAt(), d.itemKind(),
+                    d.quantity());
         });
     }
 
@@ -139,6 +141,39 @@ class DisposalControllerTest {
     }
 
     @Test
+    void separatesDevicesFromLooseWasteCountedInUnits() throws Exception {
+        mvc.perform(post("/api/devices").header("Authorization", "Bearer token-ana")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"kind\": \"WASTE\", \"category\": \"BATTERIES\", \"description\": \"Pilhas usadas\", \"quantity\": 12}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.kind").value("WASTE"))
+                .andExpect(jsonPath("$.quantity").value(12));
+
+        // A device is always one unit, whatever the site sends.
+        mvc.perform(post("/api/devices").header("Authorization", "Bearer token-ana")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"kind\": \"DEVICE\", \"category\": \"MOBILE_PHONES\", \"description\": \"Celular\", \"quantity\": 5}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.quantity").value(1));
+
+        // Without a kind, batteries are waste.
+        mvc.perform(post("/api/devices").header("Authorization", "Bearer token-ana")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"category\": \"BATTERIES\", \"description\": \"Pilhas\"}"))
+                .andExpect(jsonPath("$.kind").value("WASTE"));
+
+        for (String invalid : List.of(
+                "{\"kind\": \"DEVICE\", \"category\": \"BATTERIES\", \"description\": \"Pilhas\"}",
+                "{\"kind\": \"WASTE\", \"category\": \"COMPUTERS\", \"description\": \"Notebook\"}",
+                "{\"kind\": \"WASTE\", \"category\": \"BATTERIES\", \"description\": \"Pilhas\", \"quantity\": 0}",
+                "{\"kind\": \"WASTE\", \"category\": \"BATTERIES\", \"description\": \"Pilhas\", \"quantity\": 501}")) {
+            mvc.perform(post("/api/devices").header("Authorization", "Bearer token-ana")
+                            .contentType(MediaType.APPLICATION_JSON).content(invalid))
+                    .andExpect(status().isBadRequest());
+        }
+    }
+
+    @Test
     void someoneElsesDeviceDoesNotExist() throws Exception {
         mvc.perform(get("/api/devices/{id}", PHONE_ID).header("Authorization", "Bearer token-bia"))
                 .andExpect(status().isNotFound());
@@ -150,7 +185,7 @@ class DisposalControllerTest {
     @Test
     void aDeliveredDeviceCannotBeEdited() throws Exception {
         when(devices.findById(PHONE_ID)).thenReturn(Optional.of(new Device(PHONE_ID, ANA, Material.MOBILE_PHONES,
-                "Celular antigo", null, DeviceStatus.DISPOSED, T, T)));
+                "Celular antigo", null, DeviceStatus.DISPOSED, T, T, null, null)));
         mvc.perform(put("/api/devices/{id}", PHONE_ID).header("Authorization", "Bearer token-ana")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"category\": \"MOBILE_PHONES\", \"description\": \"Outro nome\"}"))
@@ -216,7 +251,7 @@ class DisposalControllerTest {
     void aDeviceIsDeliveredOnlyOnce() throws Exception {
         pointAccepting("Ponto", Material.MOBILE_PHONES);
         when(devices.findById(PHONE_ID)).thenReturn(Optional.of(new Device(PHONE_ID, ANA, Material.MOBILE_PHONES,
-                "Celular antigo", null, DeviceStatus.DISPOSED, T, T)));
+                "Celular antigo", null, DeviceStatus.DISPOSED, T, T, null, null)));
         mvc.perform(post("/api/disposals").header("Authorization", "Bearer token-ana")
                         .contentType(MediaType.APPLICATION_JSON).content(delivery(null, false)))
                 .andExpect(status().isConflict());
@@ -226,13 +261,19 @@ class DisposalControllerTest {
     void showsTheHistoryWithTotalsByKind() throws Exception {
         when(disposals.findByUserIdOrderByDisposedOnDescCreatedAtDesc(ANA)).thenReturn(List.of(
                 new Disposal("d1", ANA, PHONE_ID, Material.MOBILE_PHONES, "Celular antigo", POINT_ID, "Ponto", true,
-                        "2026-11-20", T),
-                new Disposal("d2", ANA, "x", Material.BATTERIES, "Pilhas", POINT_ID, "Ponto", true, "2026-11-10", T)));
+                        "2026-11-20", T, null, null),
+                new Disposal("d2", ANA, "x", Material.BATTERIES, "Pilhas", POINT_ID, "Ponto", true, "2026-11-10", T, ItemKind.WASTE, 20)));
 
         mvc.perform(get("/api/disposals").header("Authorization", "Bearer token-ana"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.items.length()").value(2))
-                .andExpect(jsonPath("$.totals.total").value(2))
+                // Units: one phone and 20 batteries; two deliveries.
+                .andExpect(jsonPath("$.totals.total").value(21))
+                .andExpect(jsonPath("$.totals.deliveries").value(2))
+                .andExpect(jsonPath("$.totals.byKind.DEVICE").value(1))
+                .andExpect(jsonPath("$.totals.byKind.WASTE").value(20))
+                .andExpect(jsonPath("$.items[0].kind").value("DEVICE"))
+                .andExpect(jsonPath("$.items[1].quantity").value(20))
                 .andExpect(jsonPath("$.totals.byCategory.MOBILE_PHONES").value(1))
                 .andExpect(jsonPath("$.totals.byCategory.COMPUTERS").value(0));
     }
@@ -240,9 +281,9 @@ class DisposalControllerTest {
     @Test
     void undoingADeliveryReturnsTheDeviceToTheList() throws Exception {
         when(disposals.findById(DISPOSAL_ID)).thenReturn(Optional.of(new Disposal(DISPOSAL_ID, ANA, PHONE_ID,
-                Material.MOBILE_PHONES, "Celular antigo", POINT_ID, "Ponto", true, "2026-11-20", T)));
+                Material.MOBILE_PHONES, "Celular antigo", POINT_ID, "Ponto", true, "2026-11-20", T, null, null)));
         when(devices.findById(PHONE_ID)).thenReturn(Optional.of(new Device(PHONE_ID, ANA, Material.MOBILE_PHONES,
-                "Celular antigo", null, DeviceStatus.DISPOSED, T, T)));
+                "Celular antigo", null, DeviceStatus.DISPOSED, T, T, null, null)));
 
         mvc.perform(delete("/api/disposals/{id}", DISPOSAL_ID).header("Authorization", "Bearer token-bia"))
                 .andExpect(status().isNotFound());

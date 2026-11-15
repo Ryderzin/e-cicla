@@ -39,7 +39,8 @@ public class DeviceService {
         DeviceInput valid = input.validated();
         Instant now = Instant.now(clock);
         return DeviceView.from(devices.save(new Device(null, authenticated.user().id(), valid.category(),
-                valid.description(), valid.details(), DeviceStatus.REGISTERED, now, now)));
+                valid.description(), valid.details(), DeviceStatus.REGISTERED, now, now, valid.kind(),
+                valid.quantity())));
     }
 
     /** A device already delivered keeps what it was when it was delivered. */
@@ -50,7 +51,8 @@ public class DeviceService {
                 throw new ResponseStatusException(HttpStatus.CONFLICT, "A delivered device cannot be edited");
             }
             return DeviceView.from(devices.save(new Device(stored.id(), stored.userId(), valid.category(),
-                    valid.description(), valid.details(), stored.status(), stored.createdAt(), Instant.now(clock))));
+                    valid.description(), valid.details(), stored.status(), stored.createdAt(), Instant.now(clock),
+                    valid.kind(), valid.quantity())));
         });
     }
 
@@ -75,6 +77,6 @@ public class DeviceService {
 
     public Device changeStatus(Device device, DeviceStatus status) {
         return devices.save(new Device(device.id(), device.userId(), device.category(), device.description(),
-                device.details(), status, device.createdAt(), Instant.now(clock)));
+                device.details(), status, device.createdAt(), Instant.now(clock), device.itemKind(), device.units()));
     }
 }

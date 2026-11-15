@@ -21,6 +21,7 @@ import br.com.ecicla.api.common.TimeConfig;
 import br.com.ecicla.api.device.Device;
 import br.com.ecicla.api.device.DeviceService;
 import br.com.ecicla.api.device.DeviceStatus;
+import br.com.ecicla.api.device.ItemKind;
 import br.com.ecicla.api.point.CollectionPoint;
 import br.com.ecicla.api.point.CollectionPointRepository;
 import br.com.ecicla.api.point.Material;
@@ -53,13 +54,20 @@ public class DisposalService {
         for (Material m : Material.values()) {
             byCategory.put(m, 0L);
         }
-        mine.forEach(d -> {
+        Map<ItemKind, Long> byKind = new EnumMap<>(ItemKind.class);
+        for (ItemKind k : ItemKind.values()) {
+            byKind.put(k, 0L);
+        }
+        int units = 0;
+        for (Disposal d : mine) {
+            units += d.units();
+            byKind.merge(d.kind(), (long) d.units(), Long::sum);
             if (d.deviceCategory() != null) {
-                byCategory.merge(d.deviceCategory(), 1L, Long::sum);
+                byCategory.merge(d.deviceCategory(), (long) d.units(), Long::sum);
             }
-        });
+        }
         return new DisposalView.History(mine.stream().map(DisposalView::from).toList(),
-                new DisposalView.Totals(mine.size(), byCategory));
+                new DisposalView.Totals(units, mine.size(), byCategory, byKind));
     }
 
     public DisposalView create(Authenticated authenticated, DisposalInput input) {
@@ -87,7 +95,7 @@ public class DisposalService {
         Disposal saved = disposals.save(new Disposal(null, userId, device.id(), device.category(),
                 device.description(), point.id(),
                 point.name() == null || point.name().isBlank() ? UNNAMED_POINT : point.name(),
-                pointAccepted, day, Instant.now(clock)));
+                pointAccepted, day, Instant.now(clock), device.itemKind(), device.units()));
         devices.changeStatus(device, DeviceStatus.DISPOSED);
         return DisposalView.from(saved);
     }
