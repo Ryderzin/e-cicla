@@ -64,4 +64,10 @@ export const TOUR_STEPS: TourStep[] = [
     title: 'Sua conta',
     text: 'Entre ou crie uma conta para sugerir novos pontos e correções.',
   },
+  {
+    step: 9,
+    selector: 'preferencias',
+    title: 'Ler com conforto',
+    text: 'Use “A−” e “A+” para diminuir ou aumentar o texto do site, e o botão ao lado para trocar entre o tema claro e o escuro. No celular, o tamanho do texto fica no menu. O botão “Ouvir” lê os textos em voz alta.',
+  },
 ]

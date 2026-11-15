@@ -17,6 +17,13 @@
             document.documentElement.classList.remove('dark');
           }
         } catch (e) {}
+        // Text size chosen with "A−" / "A+" (src/lib/fontSize.ts), applied before the page shows.
+        try {
+          var f = Number(localStorage.getItem('ecicla:fonte'));
+          if ([87.5, 112.5, 125, 150].indexOf(f) >= 0) {
+            document.documentElement.style.fontSize = f + '%';
+          }
+        } catch (e) {}
       })();
     </script>
     <title>E-Cicla</title>
