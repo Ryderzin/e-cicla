@@ -154,7 +154,7 @@ export default function PointDetailsPanel({ point, onClose, deliverDeviceId }: P
             href={directionsUrl(point.latitude, point.longitude)}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-700 px-4 py-3 font-semibold text-white shadow-sm hover:bg-emerald-800 dark:bg-emerald-600 dark:hover:bg-emerald-700"
+            className="flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-700 px-4 py-3 font-semibold text-white shadow-sm hover:bg-emerald-800 dark:bg-emerald-700 dark:hover:bg-emerald-600"
           >
             <RouteIcon className="size-5" />
             Como chegar

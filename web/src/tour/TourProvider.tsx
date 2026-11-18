@@ -159,7 +159,7 @@ export function TourProvider({ children }: { children: ReactNode }) {
                 <button
                   type="button"
                   onClick={acceptInvite}
-                  className="rounded-lg bg-emerald-700 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2 dark:bg-emerald-600 dark:hover:bg-emerald-500"
+                  className="rounded-lg bg-emerald-700 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2 dark:bg-emerald-700 dark:hover:bg-emerald-600"
                 >
                   Começar tutorial
                 </button>

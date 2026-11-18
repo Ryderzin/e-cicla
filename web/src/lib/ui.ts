@@ -1,7 +1,7 @@
 // Shared Tailwind classes, so buttons and links look the same on every page.
 
 export const PRIMARY_BUTTON =
-  'inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-700 px-5 py-3 font-semibold text-white shadow-sm hover:bg-emerald-800 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-600 dark:bg-emerald-600 dark:hover:bg-emerald-700 dark:disabled:bg-slate-800 dark:disabled:text-slate-500'
+  'inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-700 px-5 py-3 font-semibold text-white shadow-sm hover:bg-emerald-800 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-600 dark:bg-emerald-700 dark:hover:bg-emerald-600 dark:disabled:bg-slate-800 dark:disabled:text-slate-500'
 
 export const SECONDARY_BUTTON =
   'inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-5 py-3 font-semibold text-slate-800 hover:bg-slate-50 disabled:cursor-not-allowed disabled:text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800 dark:disabled:text-slate-600'

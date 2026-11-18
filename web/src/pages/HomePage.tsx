@@ -127,7 +127,7 @@ const CARD_MOTION = 'motion-safe:transition motion-safe:duration-200 motion-safe
 function MapButton({ inverted = false }: { inverted?: boolean }) {
   const colors = inverted
     ? 'bg-white text-emerald-900 hover:bg-emerald-50 dark:bg-slate-900 dark:text-emerald-300 dark:hover:bg-slate-800'
-    : 'bg-emerald-700 text-white hover:bg-emerald-800 dark:bg-emerald-600 dark:hover:bg-emerald-700'
+    : 'bg-emerald-700 text-white hover:bg-emerald-800 dark:bg-emerald-700 dark:hover:bg-emerald-600'
   return (
     <Link
       to="/mapa"

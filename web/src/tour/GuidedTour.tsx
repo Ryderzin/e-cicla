@@ -324,7 +324,7 @@ export default function GuidedTour() {
               type="button"
               data-tour-action="next"
               onClick={isLastStep ? closeTour : nextStep}
-              className="rounded-lg bg-emerald-700 px-4 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2 dark:bg-emerald-600 dark:hover:bg-emerald-500"
+              className="rounded-lg bg-emerald-700 px-4 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2 dark:bg-emerald-700 dark:hover:bg-emerald-600"
             >
               {isLastStep ? 'Concluir' : 'Próximo'}
             </button>
